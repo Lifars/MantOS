@@ -1,0 +1,20 @@
+#!/bin/bash
+# todo add sudo test!
+
+
+
+if [[ ${EUID} -ne 0 ]]; then
+	echo "This script must be run as root."
+	echo "sudo ./arch-keys"
+	exit
+fi
+
+
+echo "This script will set up pacman keys.  Read more at https://wiki.archlinux.org/index.php/Pacman-key"
+echo "Starting haveged... this collects the entropy needed to generate the keys"
+systemctl start haveged
+echo "Set up pacman keys"
+pacman-key --init
+pacman-key --populate archlinux
+pacman-key --populate archassault
+

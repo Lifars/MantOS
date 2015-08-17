@@ -1,0 +1,18 @@
+
+# panel
+(sleep 1s && tint2) &
+
+# Set wallpaper
+(sleep 1s && feh --bg-tile /usr/share/wallpapers/1422653422844.png)  &
+
+# Enable as required
+#xbacklight -set 100 &
+#/usr/bin/synclient TouchpadOff=1 &
+# or
+#xinput disable "SynPS/2 Synaptics TouchPad" &
+#xxkb &
+setxkbmap us &
+
+(sleep 2 && pcmanfm -d) &
+(sleep 3 && nm-applet) &
+(sleep 3 && volumeicon) &

@@ -1,0 +1,267 @@
+Information here is as up to date as possible.
+
+Please note any problems related to ArchBang should be posted on our
+[http://bbs.archbang.org/ forums]. We do not advise or condone posting
+problems to Archlinux forums it will result in at best your thread closed or
+worse deleted.
+
+====Cheat Codes Live====
+
+Here is a list of codes that can be used at boot time, to edit boot options while
+on boot menu hit Tab key then add code/s you require
+
+sshd=on [start ssh service, password is not required live]
+xorg=<driver_name> [nouveau,ati,savage,vesa]
+
+====Installation====
+Make sure that all the partitions of the disk on which you'll install ArchBang
+Linux are unmounted & that the sound isn't used by any applications.
+
+Select install from main openbox menu [right click].
+
+Installer is a menu driven script you simply enter the number of the option and follow on
+screen instructions.
+
+Note the only option that is not required during install is mirrorlist.
+
+Installation does not take that long, really depends on your systems hardware.
+
+
+====Post Install====
+
+This is optional, extra drivers do not take up that much room. Only really for older systems.
+
+1) Check the "Video Driver" & "keyboard" sections
+
+2) Comment or remove unnecessary mirrors in /etc/pacman.d/mirrorlist
+
+3) Consult the rest of the DOC/Wiki/Forum to find answers to problems
+
+====Video driver====
+Remove xorg video drivers that were shipped with AB by typing:
+
+Note the following drivers listed may not be up to date
+
+You can check what drivers you have installed by running
+
+ pacman -Qq | grep xf86-video
+
+ sudo pacman -R xf86-video-apm xf86-video-ark xf86-video-ast\
+ xf86-video-ati xf86-video-chips xf86-video-cirrus\
+ xf86-video-dummy xf86-video-fbdev xf86-video-glint\
+ xf86-video-i128 xf86-video-i740 xf86-video-intel-uxa\
+ xf86-video-mach64 xf86-video-mga xf86-video-neomagic\
+ xf86-video-nv xf86-video-r128 xf86-video-rendition\
+ xf86-video-s3 xf86-video-s3virge xf86-video-savage\
+ xf86-video-siliconmotion xf86-video-sis xf86-video-sisusb\
+ xf86-video-tdfx xf86-video-trident xf86-video-tseng\
+ xf86-video-v4l xf86-video-vesa xf86-video-vmware\
+ xf86-video-voodoo xf86-video-xgi xf86-video-xgixp\
+ ati-dri intel-dri mach64-dri mga-dri r128-dri\
+ savage-dri sis-dri tdfx-dri
+
+Type in terminal as root:
+
+  rm /etc/X11/xorg.conf.d/20-gpudriver.conf
+
+To know your video chipset type in terminal
+
+  lspci | grep VGA
+
+Track it down in the list by typing in terminal as root:
+
+ pacman -Ss xf86-video | less
+
+Install your video driver:
+
+ pacman -S your_video_driver
+
+====Resolution====
+Go in Preferences>Screen Resolution
+
+====Maximum Brightness====
+If you want maximum brightness at boot, uncomment the following in
+~/.config/openbox/autostart
+ xbacklight -set 100 &
+
+====Sound====
+
+If you don't get any sound you can right click on volume icon on panel then
+'Open Mixer' or in a terminal run
+ alsamixer
+To unmute a channel press M to raise levels use up and down keys. To exit and
+save hit Escape key
+
+====Keyboard====
+
+If you simply want to run a different keyboard layout then add the following to
+~/.config/openbox/autostart
+
+ setxkbmap us &
+
+Change 'us' to layout of your choice [see below for more information]
+
+You can set up to 4 different configurations in
+/etc/X11/xorg.conf.d/01-keyboard-layout.conf
+You put the 2 letters that represent your country: ru Russia,
+us United States, ca Canada, fr France, etc. you get the idea
+A complete list can be found here:
+[http://wiki.laptop.org/go/Keyboard_layouts Arch Wiki Keyboard Layouts]
+(Note: when the system starts, it will use by default the first option
+you put for XkbLayout in line 5)
+
+You must also uncomment the right locale(s) in /etc/locale.gen
+
+Reboot and enjoy your right kb configuration!
+
+====Disable Blank Screen After 10 Minutes====
+
+To disable blank screen after 10 minutes of inactivity, create a file in
+/etc/X11/xorg.conf.d called custom.conf with this code:
+
+ Section "ServerFlags"
+ # disable low-level screensaver and screen DPMS poweroff
+    Option "BlankTime" "0"
+    Option "StandbyTime" "0"
+    Option "SuspendTime" "0"
+    Option "OffTime" "0"
+ EndSection
+
+====Update the system====
+
+Open a terminal [Windows Key + T] and type:
+sudo pacman -Syyu
+
+====Install an application====
+
+If you know the name of the package you would like to install,
+open the terminal and type
+
+ pacman -S NameOfThePackage
+
+For example:
+
+ pacman -S firefox
+
+And it will install firefox for you.
+
+All right, now let's say you know the type of application you want
+or the name of the application but you do not know the exact package
+name, use the search function by typing in the terminal:
+
+ pacman -Ss DescriptionOfWhatYouAreLookingFor
+
+For example:
+
+ pacman -Ss mozilla browser
+
+You will get many results and the first one will most likely be
+Firefox. Now you know the right package name (firefox) and you have a small
+description of the package.
+
+Let's say you're worried about the amount of space Firefox could take
+once installed on your precious hard drive, you can have further
+informations about a package by typing
+
+ pacman -Si NameOfThePackage
+
+For example:
+
+ pacman -Si firefox
+
+will let you know that the installed size of that package is 3.5MB. You'll also
+know more about the package's
+dependencies (such as xulrunner & desktop-file-utils)that are
+automatically pulled if you do not have them already.
+
+Finally, you need to know that there are Arch Linux main repositories which
+are
+core, extra, community that have the most common packages used by most
+distributions. Packages for newer & less popular applications are often
+located in the AUR (which is the Arch User Repository).
+
+====Autostart an application====
+
+Simply add the application in autostart.sh. Let's say you would like to
+launch gimp when your system starts, you would go in Preferences>
+Openbox Config>Edit autostart.sh and add the following line at the end:
+
+gimp &
+
+====Delete an application====
+
+Run as root
+
+ pacman -R ThePackageYouWantToDelete
+
+for example:
+
+ pacman -R firefox
+
+will remove firefox.
+
+You should keep in mind that the first time you installed Firefox, it installs
+other required dependencies which are still on
+your system! A cleaner way to remove firefox would be:
+
+ pacman -Rnsc firefox
+
+It will remove the package (firefox) and its dependencies (xulrunner &
+desktop-file-utils) and its configuration files :D. You have to be
+careful with this "cleaner" way of removing an application because you
+could get rid of dependencies needed by another application.
+For example: xulrunner is also needed by google-gadgets. If you do not
+have google-gadgets installed on your system, then there's nothing to
+worry about.
+
+====Extras====
+
+If you are coming from another distribution, check out
+[https://wiki.archlinux.org/index.php/Pacman_Rosetta Arch Wiki
+Pacman_Rosetta]
+
+If you want to know more about pacman, check out
+[https://wiki.archlinux.org/index.php/Pacman Arch Wiki Pacman]
+
+If you want to know more about packer, type in terminal "man packer"
+
+The best wiki in the world for Arch Linux is located at
+[https://wiki.archlinux.org/index.php/Main_Page Arch Wiki]
+You will find answers for almost everything in there and if you think
+something is not properly explained or missing in their wiki, feel free
+to edit it :D
+
+Love docks, check adeskbar
+
+Enhancing Arch Stability: [http://bbs.archbang.org/viewtopic.php?id=2372
+See this thread]
+
+Update notifier: yapan
+
+List of Common Arch applications:
+[https://wiki.archlinux.org/index.php/Common_Applications Arch Wiki
+Common Applications]
+
+Pkgstats: investigate the most popular Arch packages based on statistics
+These are the statistics of users using pkgstats:
+[https://www.archlinux.de/?page=PackageStatistics Package Stats website]
+
+Sync your clock with net time, check ntpd:
+[https://wiki.archlinux.org/index.php/Network_Time_Protocol_daemon Arch
+Wiki Ntpd]
+
+====Have Fun!====
+
+Everything about Arch isn't covered in this guide of course so check the Arch
+Wiki please
+
+====Grub Note====
+
+Grub uses a default configuration file. If you have problems post install you
+may not get any boot messages that will help. To show boot messages you
+need to edit /etc/default/grub file. Look for the line:
+ GRUB_CMDLINE_LINUX_DEFAULT="quiet ..."
+Remove the word 'quiet' Save the file and run in a terminal
+
+ sudo grub-mkconfig -o /boot/grub/grub.cfg
+

@@ -1,0 +1,12 @@
+[Unit]
+Description=Last minute MantOS settings
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/lastmin
+
+[Install]
+WantedBy=multi-user.target
+
+

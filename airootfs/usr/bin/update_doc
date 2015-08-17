@@ -1,0 +1,20 @@
+#!/bin/bash
+# update_doc script
+# Linked to menu / keyboard shortcut
+
+# Wiki page to load in firefox
+WIKIURL="http://wiki.archbang.org/index.php?title=ArchBang_Document"
+
+# Inform User 
+#notify-send -u low -i stock_dialog-info " " "Finding guide please wait..."
+
+# README in users ~/Desktop 
+DOCSTATUS=$HOME/Desktop/README
+
+# Test for network connection
+[ $(curl -m 15 -o /dev/null --silent --head --write-out '%{http_code}\n' $WIKIURL) == 200 ] && DOCSTATUS=$WIKIURL
+
+# run in browser 
+firefox $DOCSTATUS
+
+exit 0

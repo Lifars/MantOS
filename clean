@@ -1,0 +1,4 @@
+rm -rf ./out
+rm -rf ./work
+rm -rf ./aur/aur-build/*
+rm ./aur/repo/$(uname -m)/*

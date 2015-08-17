@@ -1,0 +1,179 @@
+## Archive Tools
+zip
+unzip
+unrar
+p7zip
+xz
+lzop
+
+# File manager
+pcmanfm
+udevil
+
+# Editors
+leafpad
+kate
+nano
+bless
+
+# Xorg
+xorg-server
+xorg-xinit
+xorg-utils
+xorg-server-utils
+xorg-xkill
+ttf-bitstream-vera
+
+# Sound
+alsa-firmware
+alsa-utils
+alsa-oss
+
+# Window Manager Stuff
+openbox
+openbox-themes
+numix-themes
+laptop-detect
+xdg-user-dirs
+tint2
+dmenu
+volumeicon
+lxdm
+
+# extra tools
+gparted
+fakeroot
+jshon
+ntp
+binutils
+patch
+make
+
+# Xorg Extras
+fontconfig
+virtualbox-guest-utils
+kbd
+
+# Extra Apps
+slock
+feh
+at
+openssh
+pkgfile
+clonezilla
+ncdu
+tmux
+terminator
+arch-install-scripts
+wget
+firefox
+gstreamer0.10-base-plugins
+gstreamer0.10-good
+scrot
+lxde-icon-theme
+git
+libreoffice-fresh
+
+# Media
+deadbeef
+libmad
+
+obconf
+lxappearance
+lxinput
+lxrandr
+obmenu-generator
+
+# Network Tools
+tcl
+usb_modeswitch
+wpa_supplicant
+libsecret
+polkit
+rfkill
+networkmanager
+network-manager-applet
+xfce4-notifyd
+#connman
+gnome-keyring
+wvdial
+
+# Develop Tools
+dialog
+sudo
+squashfs-tools
+ntfs-3g
+dnsutils
+rsync
+dosfstools
+htop 
+haveged
+parted
+gptfdisk
+ddrescue
+dmraid
+
+# Intel microcode
+intel-ucode
+
+# Bootloader
+grub
+os-prober
+lsb-release
+syslinux
+
+# Video drivers
+xf86-input-evdev
+xf86-input-joystick
+xf86-input-keyboard
+xf86-input-mouse
+xf86-input-synaptics
+xf86-input-void
+xf86-video-ark
+xf86-video-ati
+xf86-video-dummy
+xf86-video-fbdev
+xf86-video-glint
+xf86-video-i128
+xf86-video-intel
+xf86-video-mach64
+xf86-video-neomagic
+xf86-video-nouveau
+xf86-video-nv
+xf86-video-openchrome
+xf86-video-r128
+xf86-video-savage
+xf86-video-siliconmotion
+xf86-video-sis
+xf86-video-tdfx
+xf86-video-trident
+xf86-video-vesa
+xf86-video-voodoo
+
+# ArchAssualt
+archassault-keyring
+archassault-mirrorlist
+
+# BlackArch
+blackarch-keyring
+
+#fonts
+adobe-source-code-pro-fonts
+adobe-source-sans-pro-fonts
+adobe-source-serif-pro-fonts
+artwiz-fonts
+ttf-droid
+ttf-liberation
+
+#tools
+ettercap
+wireshark-gtk
+kismet
+ssldump
+tcpick
+argus
+chaosreader
+xplico
+tcpextract
+cookie-cadger
+voipong 
