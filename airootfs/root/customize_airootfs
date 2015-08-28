@@ -1,3 +1,4 @@
+
 #!/bin/bash
 # Configure live iso
 set -e -u -x
@@ -32,10 +33,6 @@ hwclock --systohc --utc
 # Timezone
 ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 
-# Uncomment mirrors
-sed -i "s/#Server/Server/g" /etc/pacman.d/mirrorlist \
-	/etc/pacman.d/archassault-mirrorlist
-
 # Logs files live
 sed -i 's/#\(Storage=\)auto/\1volatile/' /etc/systemd/journald.conf
 
@@ -56,19 +53,13 @@ rm -rf !(en_US|en_GB|en\@quot|locale.alias)
 # Remove gnome icons
 #rm -rf /usr/share/icons/gnome
 
-
 # Get Packer
 su -c 'git clone https://github.com/oshazard/apacman.git' root
 su -c 'mv ./apacman/apacman /bin/' root
 su -c 'chmod 777 /bin/apacman' root
 su -c 'rm -rf apacman' root
 
-# ArchAssualt repo
 PCONF="/etc/pacman.conf"
-echo -e "\n[archassault]" >> ${PCONF}
-echo "SigLevel = Required DatabaseOptional TrustedOnly" >> ${PCONF}
-echo "Include = /etc/pacman.d/archassault-mirrorlist" >> ${PCONF}
-
 echo -e "\n[blackarch]" >> ${PCONF}
 echo "SigLevel = Required DatabaseOptional TrustedOnly" >> ${PCONF}
 echo "Server = http://mirror.team-cymru.org/blackarch/\$repo/os/\$arch" >> ${PCONF}
@@ -77,13 +68,12 @@ echo "Server = http://mirror.team-cymru.org/blackarch/\$repo/os/\$arch" >> ${PCO
 #	sed -i -e'/^#\[multilib\]/{s/#//;N;s/#//;N;s/#//}' ${PCONF}
 #fi
 
-
 su -c "pacman-key --init"
-su -c "pacman-key --populate archassault blackarch archlinux"
-su -c "apacman -S $(grep -h -v ^# /etc/aur_packages)"
+su -c "pacman-key --populate"
+sed -i '/#/d;/^[ ]*$/d' /etc/aur_packages
+sed -i ':a;N;$!ba;s/\n/ /g' /etc/aur_packages
+apacman -S $(cat /etc/aur_packages) --noconfirm
 
 # Start required systemd services
 systemctl enable pacman-init.service lastmin.service NetworkManager.service lxdm.service ntpd.service
 #systemctl set-default multi-user.target
-
-timedatectl set-ntp 1

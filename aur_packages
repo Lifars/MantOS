@@ -1,15 +1,21 @@
-#wireless
-broadcom-wl
+# Wireless
+#broadcom-wl
+#Was recently picked up again, still not working for us though
+broadcom-wl-dkms
+#Replaces broadcom-wl, but only has 802.11 support (no abgn)
 
-#extra tools
-#gist-git
-#apacman
+# Extra tools
+apacman
+gist-git
+oh-my-zsh-git
+sublime-text-dev
+teamviewer
 
-#icons
-#numix-icon-theme-git
-#numix-circle-icon-theme-git
+# Icons
+numix-icon-theme-git
+numix-circle-icon-theme-git
 
-#tools
-tcpdstat
+# Tools
 tcptrace
 #xampp
+xplico

@@ -1,15 +1,23 @@
-Super+t Terminal
-Super+f File Manager
-Super+e Editor
-Super+w Web Browser
-Super+q Force Quit
-Super+g Character Map
-Super+r Read the DOC
-Super+a Toggle Maximize
-Super+h Toggle Horizontal
-Super+v Toggle Vertical
-Super+c Move to Center
-Super+space Main Menu
-Super+Arrow Move
-Alt+F3 Dmenu
-Alt+Super+Arrow Resize
+ALT+F3                Dmenu
+ALT+F4                Close
+ALT+ESC             Focus to Bottom
+ALT+SPACE         Application Menu
+ALT+TAB              Next Window
+SUPER+SPACE    Main Menu
+SUPER+D            Desktop
+SUPER+E             Editor
+SUPER+F             File Manager
+SUPER+G            Character Map
+SUPER+L             Lock Screen
+SUPER+M            MantOS Documentation
+SUPER+Q            Force Quit
+SUPER+R             Read the DOC
+SUPER+T             Terminal
+SUPER+W            Web Browser
+
+SUPER+A             Toggle Maximize
+SUPER+H             Toggle Horizontal
+SUPER+V             Toggle Vertical
+SUPER+C             Move to Center
+SUPER+ARROW    Move
+ALT+SUPER+ARROW   Resize

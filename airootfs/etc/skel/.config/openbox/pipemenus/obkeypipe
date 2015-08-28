@@ -1,5 +1,5 @@
 #!/bin/bash
-binds_file="/home/live/.config/openbox/pipemenus/binds.txt"
+binds_file="/home/eugene/.config/openbox/pipemenus/binds.txt"
 
 echo "<openbox_pipe_menu>"
 while IFS= read -r line

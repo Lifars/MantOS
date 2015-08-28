@@ -1,125 +1,121 @@
-## Archive Tools
-zip
-unzip
-unrar
-p7zip
-xz
+# Archive Tools
 lzop
+p7zip
+unrar
+unzip
+xz
+zip
 
 # File manager
 pcmanfm
 udevil
 
 # Editors
-leafpad
-kate
-nano
 bless
+nano
 
 # Xorg
-xorg-server
-xorg-xinit
-xorg-utils
-xorg-server-utils
-xorg-xkill
 ttf-bitstream-vera
+xorg-server
+xorg-server-utils
+xorg-utils
+xorg-xinit
+xorg-xkill
 
 # Sound
 alsa-firmware
-alsa-utils
 alsa-oss
+alsa-utils
 
 # Window Manager Stuff
+dmenu
+laptop-detect
+lxdm
+numix-themes
 openbox
 openbox-themes
-numix-themes
-laptop-detect
-xdg-user-dirs
 tint2
-dmenu
+xdg-user-dirs
 volumeicon
-lxdm
 
-# extra tools
-gparted
-fakeroot
-jshon
-ntp
+# Extra tools
 binutils
-patch
+fakeroot
+gparted
+jshon
 make
+ntp
+patch
 
 # Xorg Extras
 fontconfig
-virtualbox-guest-utils
 kbd
+virtualbox-guest-utils
 
 # Extra Apps
-slock
-feh
-at
-openssh
-pkgfile
-clonezilla
-ncdu
-tmux
-terminator
 arch-install-scripts
-wget
+at
+clonezilla
+feh
 firefox
+git
 gstreamer0.10-base-plugins
 gstreamer0.10-good
-scrot
 lxde-icon-theme
-git
-libreoffice-fresh
+ncdu
+openssh
+pkgfile
+scrot
+slock
+terminator
+tmux
+wget
+zsh
 
 # Media
 deadbeef
 libmad
-
-obconf
 lxappearance
 lxinput
 lxrandr
-obmenu-generator
+obconf
 
 # Network Tools
+#connman
+gnome-keyring
+libsecret
+network-manager-applet
+networkmanager
+polkit
+rfkill
 tcl
 usb_modeswitch
 wpa_supplicant
-libsecret
-polkit
-rfkill
-networkmanager
-network-manager-applet
-xfce4-notifyd
-#connman
-gnome-keyring
 wvdial
+xfce4-notifyd
 
 # Develop Tools
-dialog
-sudo
-squashfs-tools
-ntfs-3g
-dnsutils
-rsync
-dosfstools
-htop 
-haveged
-parted
-gptfdisk
 ddrescue
+dialog
 dmraid
+dnsutils
+dosfstools
+gptfdisk
+haveged
+htop 
+ntfs-3g
+parted
+rsync
+squashfs-tools
+sudo
 
 # Intel microcode
 intel-ucode
 
 # Bootloader
 grub
-os-prober
 lsb-release
+os-prober
 syslinux
 
 # Video drivers
@@ -128,7 +124,6 @@ xf86-input-joystick
 xf86-input-keyboard
 xf86-input-mouse
 xf86-input-synaptics
-xf86-input-void
 xf86-video-ark
 xf86-video-ati
 xf86-video-dummy
@@ -148,16 +143,13 @@ xf86-video-sis
 xf86-video-tdfx
 xf86-video-trident
 xf86-video-vesa
+xf86-input-void
 xf86-video-voodoo
-
-# ArchAssualt
-archassault-keyring
-archassault-mirrorlist
 
 # BlackArch
 blackarch-keyring
 
-#fonts
+# Fonts
 adobe-source-code-pro-fonts
 adobe-source-sans-pro-fonts
 adobe-source-serif-pro-fonts
@@ -165,15 +157,34 @@ artwiz-fonts
 ttf-droid
 ttf-liberation
 
-#tools
+# Tools
+air
+dc3dd
+gnu-netcat
+#cryptcat
+bios_memimage
+bro
+cheetah
+python2-requests
+python-requests
+dmitry 
+firewalk 
+fl0p
+gvfs
+#If ./build fails, uninstall gvfs
+nmap
+ophcrack
+volatility
+python2-dbus
 ettercap
 wireshark-gtk
 kismet
+aircrack-ng
+net-tools
 ssldump
 tcpick
 argus
 chaosreader
-xplico
 tcpextract
 cookie-cadger
 voipong 

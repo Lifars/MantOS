@@ -1,0 +1,45 @@
+##
+## Arch Linux repository mirrorlist
+## Generated on 2015-10-07
+##
+
+## United States
+Server = http://arch.mirrors.pair.com/$repo/os/$arch
+Server = http://mirrors.abscission.net/archlinux/$repo/os/$arch
+Server = http://mirrors.acm.wpi.edu/archlinux/$repo/os/$arch
+Server = http://mirrors.advancedhosters.com/archlinux/$repo/os/$arch
+Server = http://mirrors.aggregate.org/archlinux/$repo/os/$arch
+Server = http://archlinux.surlyjake.com/archlinux/$repo/os/$arch
+Server = http://mirror.atlantic.net/archlinux/$repo/os/$arch
+Server = http://mirrors.cat.pdx.edu/archlinux/$repo/os/$arch
+Server = http://mirror.cc.columbia.edu/pub/linux/archlinux/$repo/os/$arch
+Server = http://cosmos.cites.illinois.edu/pub/archlinux/$repo/os/$arch
+Server = http://mirror.cs.pitt.edu/archlinux/$repo/os/$arch
+Server = http://mirror.es.its.nyu.edu/archlinux/$repo/os/$arch
+Server = http://mirror1.gaw.solutions/arch/$repo/os/$arch
+Server = http://mirror2.gaw.solutions/arch/$repo/os/$arch
+Server = http://mirror3.gaw.solutions/arch/$repo/os/$arch
+Server = http://mirrors.gigenet.com/archlinux/$repo/os/$arch
+Server = http://mirror.grig.io/archlinux/$repo/os/$arch
+Server = http://www.gtlib.gatech.edu/pub/archlinux/$repo/os/$arch
+Server = http://mirror.ancl.hawaii.edu/linux/archlinux/$repo/os/$arch
+Server = http://mirror.htnshost.com/archlinux/$repo/os/$arch
+Server = http://arch.mirrors.ionfish.org/$repo/os/$arch
+Server = http://mirror.jmu.edu/pub/archlinux/$repo/os/$arch
+Server = http://mirrors.kernel.org/archlinux/$repo/os/$arch
+Server = http://kwk.pw/arch/$repo/os/$arch
+Server = http://mirror.us.leaseweb.net/archlinux/$repo/os/$arch
+Server = http://mirrors.liquidweb.com/archlinux/$repo/os/$arch
+Server = http://arch.localmsp.org/arch/$repo/os/$arch
+Server = http://lug.mtu.edu/archlinux/$repo/os/$arch
+Server = http://mirror.metrocast.net/archlinux/$repo/os/$arch
+Server = http://mirror.nexcess.net/archlinux/$repo/os/$arch
+Server = http://mirrors.ocf.berkeley.edu/archlinux/$repo/os/$arch
+Server = http://ftp.osuosl.org/pub/archlinux/$repo/os/$arch
+Server = http://archlinux.pallissard.net/archlinux/$repo/os/$arch
+Server = http://mirror.rit.edu/archlinux/$repo/os/$arch
+Server = http://mirrors.rutgers.edu/archlinux/$repo/os/$arch
+Server = http://mirror.umd.edu/archlinux/$repo/os/$arch
+Server = http://mirror.vtti.vt.edu/archlinux/$repo/os/$arch
+Server = http://mirrors.xmission.com/archlinux/$repo/os/$arch
+Server = http://mirror.yellowfiber.net/archlinux/$repo/os/$arch
