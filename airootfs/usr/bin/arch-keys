@@ -15,6 +15,4 @@ echo "Starting haveged... this collects the entropy needed to generate the keys"
 systemctl start haveged
 echo "Set up pacman keys"
 pacman-key --init
-pacman-key --populate archlinux
-pacman-key --populate archassault
-
+pacman-key --populate

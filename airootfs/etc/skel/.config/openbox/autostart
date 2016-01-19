@@ -16,3 +16,7 @@ setxkbmap us &
 (sleep 2 && pcmanfm -d) &
 (sleep 3 && nm-applet) &
 (sleep 3 && volumeicon) &
+
+xinput set-prop "SynPS/2 Synaptics TouchPad" "Synaptics Noise Cancellation" 20 20 &
+xinput set-prop "SynPS/2 Synaptics TouchPad" "Synaptics Finger" 50 50 70 &
+

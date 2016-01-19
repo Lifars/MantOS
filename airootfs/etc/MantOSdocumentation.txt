@@ -1,0 +1,266 @@
+MantOS Documentation
+by Eugene Fong
+
+================================================================
+TABLE OF CONTENTS
+================================================================
+1) USB mounting
+2) File name section format (example)
+3) AUR_packages tools
+4) Packages tools
+
+NOTES 
+- Not entirely in alphabetical order. Associated tools or dependencies of packages were placed directly underneath main package. As such, I recommend using search (Ctrl+F) if you know what you're looking for
+- Usually the command on terminal is the same as it's name, check notes here for those which differ from their package names
+
+================================================================
+1) USB MOUNTING
+================================================================
+#Manual mounting
+
+- Followed this guide: https://dhakshinamoorthy.wordpress.com/2013/11/10/mounting-a-usb-storage-device-in-arch-linux-in-2-steps/
+
+1) From command prompt, type:
+sudo blkid
+2) You'll see a list showing harddrives and USB's labelled "sda1, sdb1, etc"
+3) Create a directory inside mnt named “usbdrive” (or whatever name you want, it may save your old names and not allow you to use the same names again)
+4) sudo mount /dev/sdb# /mnt/usbdrive
+
+#Auto mounting
+
+1) sudo apacman -S gvfs 
+2) Once installed, GVFS will automatically detect USB devices upon connect and automount and autodismount them. However, it will detect other .ISO files you have as well and attempt to mount them. For work requiring the ./build script or any .ISO files I suggest that you manually mount USB drives yourself to avoid issues. Alternatively, you can just install gvfs and uninstall when you need to work with ./build or .ISO files. 
+
+================================================================
+2) FILE NAME #SECTION
+================================================================
+
+NAME 	| package name
+COMMAND | command on terminal (sometimes differs from the name)
+URL		| official website and/or helpful guides
+
+- DESCRIPTION + NOTES
+
+================================================================
+3) AUR_PACKAGES #TOOLS
+================================================================
+
+NAME 	| tcptrace
+COMMAND | tcptrace
+URL		| http://www.tcptrace.org/
+
+- For analysis of TCP dump files. It can take as input the files produced by several popular packet-capture programs, including tcpdump, snoop, etherpeek, HP Net Metrix, and WinDump. 
+
+================================================================
+4) PACKAGES #TOOLS
+================================================================
+
+NAME 	| air
+COMMAND | air
+URL 	| http://sourceforge.net/p/air-imager/wiki/Home/ 
+
+- GUI front-end to dd/dc3dd designed for easily creating forensic images. 
+- NOTE: Additional dependencies are netcat, cryptcat, and a 'helper application'
+- NOTE: Post installation says "add yourself to the air group to use this" can do that via:
+===COMMANDS===
+# sudo gpasswd -a username air
+$ newgrp air
+==============
+
+	NAME 	| dc3dd
+	COMMAND | dc3dd
+	URL		| http://sourceforge.net/projects/dc3dd/
+
+	- A patch to the GNU dd program, this version has several features intended for forensic acquisition of data. 
+
+	NAME 	| gnu-netcat
+	COMMAND | netcat
+	URL		| http://netcat.sourceforge.net/
+
+	- Netcat is a featured networking utility which reads and writes data across network connections, using the TCP/IP protocol.
+
+	NAME 	| cryptcat
+	COMMAND | cryptcat
+	URL		| https://archstrike.org/packages/cryptcat
+	
+	- Cryptcat is the standard netcat enhanced with twofish encryption with ports for WIndows NT, BSD and Linux
+	- NOTE: Archstrike took cryptcat down around week of 10/20/15 
+
+NAME 	| bios_memimage
+COMMAND | pxedump, usbdump
+URL		| https://citp.princeton.edu/research/memory/
+
+- A tool to dump RAM contents to disk (aka cold boot attack).
+-NOTE: It connects to a host machine via ip address but requires editing BIOS of the host machine and then will dump the RAM contents into client machine upon shutdown
+
+NAME 	| bro
+COMMAND | bro
+URL		| https://www.bro.org/
+		| https://www.bro.org/documentation/exercises/index.html
+
+- A powerful network analysis framework that is much different from the typical IDS you may know.
+
+NAME 	| cheetah
+COMMAND | cheetah
+URL		| https://github.com/bl4de/Cheetah
+
+- Complete penetration testing suite (port scanning, brute force attacks, services discovery, common vulnerabilities searching, reporting etc.)
+- NOTE: NECESSARY DEPENDENCIES --> python2-requests, and python-requests
+
+	NAME 	| python2-requests
+	COMMAND | ?
+	URL		| http://docs.python-requests.org/en/latest/
+	
+	- Requests is an Apache2 Licensed HTTP library, written in Python, for human beings.
+
+	NAME 	| python-requests
+	COMMAND | ?
+	URL		| http://docs.python-requests.org/en/latest/
+	
+	- Requests is an Apache2 Licensed HTTP library, written in Python, for human beings.
+
+NAME 	| dmitry
+COMMAND | dmitry
+URL		| http://linux.die.net/man/1/dmitry
+
+- Deepmagic Information Gathering Tool. Gathers information about hosts. It is able to gather possible subdomains, email addresses, and uptime information and run tcp port scans, whois lookups, and more.
+
+NAME 	| firewalk
+COMMAND | firewalk
+URL		| http://packetfactory.openwall.net/projects/firewalk/
+		| http://www.techrepublic.com/article/use-firewalk-in-linux-unix-to-verify-acls-and-check-firewall-rule-sets/
+		| https://www.google.com/search?q=fw_init_network%28%29%3A+libnet_init%28%29%3A+libnet_open_link%28%29%3A+UID%2FEUID+0+or+capability+CAP_NET_RAW+required&ie=utf-8&oe=utf-8#q=firewalk+%22capability+CAP_NET_RAW+required%22
+		| https://packetstormsecurity.com/files/12984/firewalk-final.doc.html
+ 
+- An active reconnaissance network security tool
+
+NAME 	| fl0p
+COMMAND | sudo fl0p
+URL		| http://lcamtuf.coredump.cx/soft/fl0p.fp
+
+- A passive L7 flow fingerprinter that examines TCP/UDP/ICMP packet sequences, can peek into cryptographic tunnels, can tell human beings and robots apart, and performs a couple of other infosec-related tricks.
+- NOTE: Need to use tcpdump files with .pcap extension, but only listen on 1 interface when creating tcpdump file to get this to work, instead of "all"
+
+NAME 	| nmap
+COMMAND | nmap
+URL		| https://nmap.org/
+		| https://en.wikipedia.org/wiki/Nmap
+
+- Utility for network discovery and security auditing
+
+NAME 	| ophcrack
+COMMAND | ophcrack
+URL		| http://ophcrack.sourceforge.net/
+
+- A free Windows password cracker based on rainbow tables
+- NOTE: Bring your own rainbow tables
+
+NAME 	| volatility
+COMMAND | volatility
+URL		| https://github.com/volatilityfoundation/volatility/wiki
+
+- A memory forensics toolkit.
+- NOTE: Analyzes .dmp files
+
+NAME 	| python2-dbus
+COMMAND | ?
+URL		| http://www.freedesktop.org/wiki/Software/DBusBindings/
+
+- Python 2.7 bindings for DBUS (Avahi depend)
+
+NAME 	| ettercap
+COMMAND | ettercap
+URL		| https://ettercap.github.io/ettercap/
+
+- Offensive, used for MITM attacks
+
+NAME 	| wireshark-gtk
+COMMAND | sudo wireshark-gtk
+URL		| https://wiki.archlinux.org/index.php/Wireshark
+
+- Wireshark is a free and open-source packet analyzer.
+
+NAME 	| kismet
+COMMAND | kismet
+URL		| https://www.kismetwireless.net/
+
+- Wireless reconaissance
+- NOTE: Need to put card in monitor mode first (using aircrack commands)
+- USAGE:
+===COMMANDS===
+sudo airmon-ng start wlp3s0
+sudo airmon-ng stop wlp3s0 (or wlp3s0mon)
+==============
+- NOTE: This will change the name of the wifi card to have mon added at the end
+===COMMANDS===
+- Deletes Wireless interface: sudo iw wlp3s0mon del
+- Adds back Wireless interface: sudo iw phy phy0 interface add wlp3s0 type managed
+==============
+- NOTE: Stopping the monitoring service command doens't seem to work, but deleting it and adding back THE EXACT SAME NAME of your original wireless interface does work
+- NOTE: You could also just restart after running these commands instead of going thru all this headache
+
+	NAME 	| aircrack-ng
+	COMMAND | aircrack-ng, sudo airmon-ng
+	URL		| http://www.aircrack-ng.org/
+			| https://sandilands.info/sgordon/capturing-wifi-in-monitor-mode-with-iw
+
+	- Aircrack-ng is an 802.11 WEP and WPA-PSK keys cracking program that can recover keys once enough data packets have been captured
+	- NOTE: Need to put card in monitor mode first (see Kismet)
+
+NAME 	| net-tools
+COMMAND | arp, hostname, ifconfig, netstat, rarp, route, 
+		| plipconfig, slattach, mii-tool, iptunnel, ipmaddr
+URL		| http://sourceforge.net/projects/net-tools/
+
+- A collection of programs that form the base set of the NET-3 networking distribution for the Linux operating system.
+
+NAME 	| ssldump
+COMMAND | sudo ssldump
+URL		| http://ssldump.sourceforge.net/
+
+- ssldump is an SSLv3/TLS network protocol analyzer
+- NOTE: Analyzes .pcap files
+
+NAME 	| tcpick
+COMMAND | sudo tcpick
+URL		| http://tcpick.sourceforge.net/
+		| http://tcpick.sourceforge.net/index.php?p=screenshots.inc
+
+- tcpick is a textmode sniffer libpcap-based that can track, reassemble and reorder tcp streams.
+
+NAME 	| argus
+COMMAND | sudo argus
+URL		| http://nsmwiki.org/index.php?title=Argus
+
+-Argus is an open source layer 2+ auditing tool (including IP audit) written by Carter Bullard which has been under development for over 10 years.
+
+NAME 	| chaosreader
+COMMAND | chaosreader
+URL		| http://chaosreader.sourceforge.net/
+
+- A freeware tool to trace TCP/UDP/... sessions and fetch application data from snoop or tcpdump logs
+
+NAME 	| xplico
+COMMAND | ???
+URL		| http://wiki.xplico.org/doku.php
+		| http://www.xplico.org/
+
+- The goal of Xplico is extract from an internet traffic capture the applications data contained.
+
+NAME 	| tcpextract
+COMMAND | sudo tcpextract
+URL		| https://pypi.python.org/pypi/tcpextract/1.1
+
+- Extract files from captured TCP sessions. Support live streams and pcap files.
+
+NAME 	| cookie-cadger
+COMMAND | cookie-cadger
+URL		| https://www.cookiecadger.com/
+
+- Cookie Cadger helps identify information leakage from applications that utilize insecure HTTP GET requests.
+
+NAME 	| voipong
+COMMAND | sudo voipong
+URL		| http://www.enderunix.org/voipong/
+
+- VoIPong is a utility which detects all Voice Over IP calls on a pipeline, and for those which are G711 encoded, dumps actual conversation to seperate wave files.  

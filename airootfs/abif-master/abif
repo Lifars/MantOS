@@ -1,0 +1,1850 @@
+# !/bin/bash
+#
+# Arch Base Installation Framework (version 1.3 - 08-Oct-2015)
+#
+# Written by Carl Duff for ArchBang Linux
+#
+# This program is free software, provided under the GNU General Public License
+# as published by the Free Software Foundation. So feel free to copy, distribute,
+# or modify it as you wish.
+#
+
+######################################################################
+##																	##
+##                   Installer Variables							##
+##																	##
+######################################################################
+
+# ISO Specific Variables
+ISO_HOST="mantos"									# ISO Host Name
+ISO_USER="live"										# Live user account
+VERSION="MantOS Installation Framework 1.0"			# Installer Name / Version
+TRANS_SRC="/abif-master"							# Dir where translation files are stored
+
+# Create a temporary file to store menu selections
+ANSWER="/tmp/.abif"
+
+# Installation
+BOOTLOADER="n/a"      		# Which bootloader has been installed?
+KEYMAP="us"          		# Virtual console keymap. Default is "us"
+XKBMAP="us"      	    	# X11 keyboard layout. Default is "us"
+ZONE=""               		# For time
+SUBZONE=""            		# For time
+LOCALE="en_US.UTF-8"  		# System locale. Default is "en_US.UTF-8"
+
+# Architecture
+ARCHI=`uname -m`     		# Display whether 32 or 64 bit system
+SYSTEM="Unknown"     		# Display whether system is BIOS or UEFI. Default is "unknown"
+ROOT_PART=""          		# ROOT partition
+UEFI_PART=""				# UEFI partition
+UEFI_MOUNT=""         		# UEFI mountpoint
+INST_DEV=""           		# Device where system has been installed
+HIGHLIGHT=0           		# Highlight items for Main Menu
+HIGHLIGHT_SUB=0	    		# Highlight items for submenus
+SUB_MENU=""           		# Submenu to be highlighted
+
+# Logical Volume Management
+LVM=0                   	# Logical Volume Management Detected?
+LUKS=0                  	# Luks Detected?
+LVM_ROOT=0              	# LVM used for Root?
+LVM_SEP_BOOT=0          	# 1 = Seperate /boot, 2 = seperate /boot & LVM
+LVM_DISABLE=0           	# Option to allow user to deactive existing LVM
+LVM_VG=""               	# Name of volume group to create
+LVM_VG_MB=0             	# MB remaining of VG
+LVM_LV_NAME=""          	# Name of LV to create
+LV_SIZE_INVALID=0       	# Is LVM LV size entered valid?
+VG_SIZE_TYPE=""         	# Is VG in Gigabytes or Megabytes?
+
+# Installation
+MOUNTPOINT="/mnt"       	# Installation
+MOUNT_TYPE=""           	# "/dev/" for standard partitions, "/dev/mapper" for LVM
+AIROOTIMG=""                # Root image to install
+BYPASS="$MOUNTPOINT/bypass/" # Root image mountpoint
+BTRFS=0                     # BTRFS used? "1" = btrfs alone, "2" = btrfs + subvolume(s)
+BTRFS_OPTS="/tmp/.btrfs_opts" #BTRFS Mount options
+BTRFS_MNT=""                # used for syslinux where /mnt is a btrfs subvolume
+
+# Language Support
+CURR_LOCALE="en_US.UTF-8"   # Default Locale
+FONT=""                     # Set new font if necessary
+
+# Edit Files
+FILE=""                     # Which file is to be opened?
+FILE2=""					# Which second file is to be opened?
+
+######################################################################
+##																	##
+##                        Core Functions							##
+##																	##
+######################################################################
+
+# Add locale on-the-fly and sets source translation file for installer
+select_language() {
+    
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Select Language " --menu "\nLanguage / sprache / taal / språk / lingua / idioma / nyelv / língua" 0 0 11 \
+ 	"1" $"English		(en)" \
+ 	"2" $"Italian 		(it)" \
+ 	"3" $"Russian 		(ru)" \
+ 	"4" $"Turkish 		(tr)" \
+ 	"5" $"Dutch 		(nl)" \
+ 	"6" $"Greek 		(el)" \
+ 	"7" $"Danish 		(da)" \
+ 	"8" $"Hungarian 	(hu)" \
+ 	"9" $"Portuguese 	(pt)" \
+   "10" $"German	 	(de)" \
+   "11" $"French		(fr)" 2>${ANSWER}
+
+	case $(cat ${ANSWER}) in
+        "1") source ${TRANS_SRC}/english.trans
+             CURR_LOCALE="en_US.UTF-8"
+             ;;
+        "2") source ${TRANS_SRC}/italian.trans
+             CURR_LOCALE="it_IT.UTF-8"
+             ;; 
+        "3") source ${TRANS_SRC}/russian.trans
+             CURR_LOCALE="ru_RU.UTF-8"
+             FONT="LatKaCyrHeb-14.psfu"
+             ;;
+        "4") source ${TRANS_SRC}/turkish.trans
+             CURR_LOCALE="tr_TR.UTF-8"
+             FONT="LatKaCyrHeb-14.psfu"
+             ;;
+        "5") source ${TRANS_SRC}/dutch.trans
+             CURR_LOCALE="nl_NL.UTF-8"
+             ;;             
+        "6") source ${TRANS_SRC}/greek.trans
+             CURR_LOCALE="el_GR.UTF-8"
+             FONT="iso07u-16.psfu"       
+             ;;
+        "7") source ${TRANS_SRC}/danish.trans
+             CURR_LOCALE="da_DK.UTF-8"
+             ;;   
+        "8") source ${TRANS_SRC}/hungarian.trans
+             CURR_LOCALE="hu_HU.UTF-8"
+             FONT="lat2-16.psfu"
+             ;;
+        "9") source ${TRANS_SRC}/portuguese.trans
+             CURR_LOCALE="pt_BR.UTF-8"    
+             ;;      
+       "10") source ${TRANS_SRC}/german.trans
+             CURR_LOCALE="de_DE.UTF-8"
+             ;;
+       "11") source ${TRANS_SRC}/french.trans
+             CURR_LOCALE="fr_FR.UTF-8"
+             ;;
+          *) exit 0
+             ;;
+    esac
+        
+    # Generate the chosen locale and set the language
+    sed -i "s/#${CURR_LOCALE}/${CURR_LOCALE}/" /etc/locale.gen
+    locale-gen >/dev/null 2>&1
+    export LANG=${CURR_LOCALE}
+}
+
+# Check user is root, then id system parameters
+check_system() {
+	
+  dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_ChkTitle" --infobox "$_ChkBody" 0 0
+  sleep 2
+  
+  # Ensure script is run as root. If not, terminate.
+  if [[ `whoami` != "root" ]]; then
+     dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_RtFailTitle" --infobox "$_RtFailBody" 0 0
+     sleep 2
+     exit 1
+  fi
+
+  # Clear error log and detect system
+  echo "" > /tmp/.errlog
+  
+  # Apple System Detection
+  if [[ "$(cat /sys/class/dmi/id/sys_vendor)" == 'Apple Inc.' ]] || [[ "$(cat /sys/class/dmi/id/sys_vendor)" == 'Apple Computer, Inc.' ]]; then
+     modprobe -r -q efivars || true  # if MAC
+  else
+     modprobe -q efivarfs            # all others
+  fi
+    
+  # BIOS or UEFI Detection
+  if [[ -d "/sys/firmware/efi/" ]]; then
+     # Mount efivarfs if it is not already mounted
+     if [[ -z $(mount | grep /sys/firmware/efi/efivars) ]]; then
+        mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+     fi
+     SYSTEM="UEFI"
+  else
+     SYSTEM="BIOS"
+  fi
+         
+  # Encryption (LUKS) Detection
+  [[ $(lsblk -o TYPE | grep "crypt") == "" ]] && LUKS=0 || LUKS=1
+ 
+}
+
+# Chroot without terminating the script
+arch_chroot() {
+    arch-chroot $MOUNTPOINT /bin/bash -c "${1}"
+}  
+
+# If there is an error, display it, clear the log and then go back to the main menu.
+check_for_error() {
+
+ if [[ $? -eq 1 ]] && [[ $(cat /tmp/.errlog | grep -i "error") != "" ]]; then
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_ErrTitle" --msgbox "$(cat /tmp/.errlog)" 0 0
+    echo "" > /tmp/.errlog
+    main_menu
+ fi
+   
+}
+
+# Ensure that a partition is mounted
+check_mount() {
+
+    if [[ $(lsblk -o MOUNTPOINT | grep ${MOUNTPOINT}) == "" ]]; then
+       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_ErrTitle" --msgbox "$_ErrNoMount" 0 0
+       main_menu
+    fi
+
+}
+
+# Ensure that Arch has been installed
+check_base() {
+
+    if [[ ! -e ${MOUNTPOINT}/etc ]]; then
+        dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_ErrTitle" --msgbox "$_ErrNoBase" 0 0
+        main_menu_online
+    fi
+    
+}
+
+# Show devices / partitions.
+show_devices() {
+     lsblk -o NAME,MODEL,TYPE,FSTYPE,SIZE,MOUNTPOINT | grep -v "loop" | grep -v "rom" | grep -v "arch_airootfs" > /tmp/.devlist
+     dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_DevShowTitle" --textbox /tmp/.devlist 0 0
+}
+
+######################################################################
+##																	##
+##                 Configuration Functions							##
+##																	##
+######################################################################
+
+# virtual console keymap
+set_keymap() { 
+	
+	KEYMAPS=""
+    for i in $(ls -R /usr/share/kbd/keymaps | grep "map.gz" | sed 's/\.map.gz//g' | sort); do
+        KEYMAPS="${KEYMAPS} ${i} -"
+    done
+    
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_KeymapTitle" \
+    --menu "$_KeymapBody" 20 40 16 ${KEYMAPS} 2>${ANSWER} || prep_menu 
+    KEYMAP=$(cat ${ANSWER})
+    check_for_error
+    echo -e "KEYMAP=$KEYMAP\nFONT=$FONT" > /tmp/vconsole.conf
+  }
+
+# Set keymap for X11
+ set_xkbmap() {
+	 
+	XKBMAP_LIST=""
+	keymaps_xkb=("af_Afghani al_Albanian am_Armenian ara_Arabic at_German-Austria az_Azerbaijani ba_Bosnian bd_Bangla be_Belgian bg_Bulgarian br_Portuguese-Brazil bt_Dzongkha bw_Tswana by_Belarusian ca_French-Canada cd_French-DR-Congo ch_German-Switzerland cm_English-Cameroon cn_Chinese cz_Czech de_German dk_Danishee_Estonian epo_Esperanto es_Spanish et_Amharic fo_Faroese fi_Finnish fr_French gb_English-UK ge_Georgian gh_English-Ghana gn_French-Guinea gr_Greek hr_Croatian hu_Hungarian ie_Irish il_Hebrew iq_Iraqi ir_Persian is_Icelandic it_Italian jp_Japanese ke_Swahili-Kenya kg_Kyrgyz kh_Khmer-Cambodia kr_Korean kz_Kazakh la_Lao latam_Spanish-Lat-American lk_Sinhala-phonetic lt_Lithuanian lv_Latvian ma_Arabic-Morocco mao_Maori md_Moldavian me_Montenegrin mk_Macedonian ml_Bambara mm_Burmese mn_Mongolian mt_Maltese mv_Dhivehi ng_English-Nigeria nl_Dutch no_Norwegian np_Nepali ph_Filipino pk_Urdu-Pakistan pl_Polish pt_Portuguese ro_Romanian rs_Serbian ru_Russian se_Swedish si_Slovenian sk_Slovak sn_Wolof sy_Arabic-Syria th_Thai tj_Tajik tm_Turkmen tr_Turkish tw_Taiwanese tz_Swahili-Tanzania ua_Ukrainian us_English-US uz_Uzbek vn_Vietnamese za_English-S-Africa")
+    
+	for i in ${keymaps_xkb}; do
+        XKBMAP_LIST="${XKBMAP_LIST} ${i} -"
+    done
+	
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_XkbmapTitle" --menu "$_KeymapBody" 0 0 16 ${XKBMAP_LIST} 2>${ANSWER} || prep_menu
+    XKBMAP=$(cat ${ANSWER} |sed 's/_.*//')
+    echo -e "Section "\"InputClass"\"\nIdentifier "\"system-keyboard"\"\nMatchIsKeyboard "\"on"\"\nOption "\"XkbLayout"\" "\"${XKBMAP}"\"\nEndSection" > /tmp/01-keyboard-layout.conf
+    setxkbmap $XKBMAP 2>/tmp/.errlog
+    check_for_error
+}
+
+# Set the installed system's locale
+set_locale() {
+
+  LOCALES=""	
+  for i in $(cat /etc/locale.gen | grep -v "#  " | sed 's/#//g' | sed 's/ UTF-8//g' | grep .UTF-8); do
+      LOCALES="${LOCALES} ${i} -"
+  done
+
+  dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LocateTitle" --menu "$_localeBody" 0 0 16 ${LOCALES} 2>${ANSWER} || config_base_menu 
+  LOCALE=$(cat ${ANSWER})
+  
+  echo "LANG=\"${LOCALE}\"" > ${MOUNTPOINT}/etc/locale.conf
+  sed -i "s/#${LOCALE}/${LOCALE}/" ${MOUNTPOINT}/etc/locale.gen 2>/tmp/.errlog
+  arch_chroot "locale-gen" >/dev/null 2>>/tmp/.errlog
+  check_for_error
+}
+
+# Set Zone and Sub-Zone
+set_timezone() {
+
+    ZONE=""
+    for i in $(cat /usr/share/zoneinfo/zone.tab | awk '{print $3}' | grep "/" | sed "s/\/.*//g" | sort -ud); do
+      ZONE="$ZONE ${i} -"
+    done
+    
+     dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_TimeZTitle" --menu "$_TimeZBody" 0 0 10 ${ZONE} 2>${ANSWER} || config_base_menu
+     ZONE=$(cat ${ANSWER}) 
+    
+     SUBZONE=""
+     for i in $(cat /usr/share/zoneinfo/zone.tab | awk '{print $3}' | grep "${ZONE}/" | sed "s/${ZONE}\///g" | sort -ud); do
+        SUBZONE="$SUBZONE ${i} -"
+     done
+         
+     dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_TimeSubZTitle" --menu "$_TimeSubZBody" 0 0 11 ${SUBZONE} 2>${ANSWER} || config_base_menu
+     SUBZONE=$(cat ${ANSWER}) 
+    
+     dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --yesno "$_TimeZQ ${ZONE}/${SUBZONE} ?" 0 0 
+     
+     if [[ $? -eq 0 ]]; then
+        arch_chroot "ln -sf /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime" 2>/tmp/.errlog
+        check_for_error
+     else
+        config_base_menu
+     fi
+}
+
+set_hw_clock() {
+	
+   dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_HwCTitle" \
+    --menu "$_HwCBody" 0 0 2 \
+ 	"1" "$_HwCUTC" \
+	"2" "$_HwLocal" 2>${ANSWER}	
+
+    case $(cat ${ANSWER}) in
+        "1") arch_chroot "hwclock --systohc --utc"  2>/tmp/.errlog
+             ;;
+        "2") arch_chroot "hwclock --systohc --localtime" 2>/tmp/.errlog
+             ;;
+          *) config_base_menu
+             ;;
+     esac	
+     
+     check_for_error
+}
+
+# Generate the installed system's FSTAB
+generate_fstab() {
+
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_FstabTitle" \
+    --menu "$_FstabBody" 0 0 3 \
+	"1" "$_FstabDev" \
+	"2" "$_FstabLabel" \
+	"3" "$_FstabUUID" 2>${ANSWER}
+
+    case $(cat ${ANSWER}) in
+        "1") genfstab -p ${MOUNTPOINT} >> ${MOUNTPOINT}/etc/fstab 2>/tmp/.errlog
+             ;;
+        "2") genfstab -L -p ${MOUNTPOINT} >> ${MOUNTPOINT}/etc/fstab 2>/tmp/.errlog
+             ;;
+        "3") if [[ $SYSTEM == "UEFI" ]]; then
+                genfstab -t PARTUUID -p ${MOUNTPOINT} >> ${MOUNTPOINT}/etc/fstab 2>/tmp/.errlog
+             else 
+                genfstab -U -p ${MOUNTPOINT} >> ${MOUNTPOINT}/etc/fstab 2>/tmp/.errlog
+             fi
+             ;;
+          *) config_base_menu
+             ;;
+    esac
+
+    check_for_error
+
+    [[ -f ${MOUNTPOINT}/swapfile ]] && sed -i "s/\\${MOUNTPOINT}//" ${MOUNTPOINT}/etc/fstab
+    
+ 
+    # Determine if there is a swapfile before copying over appropriate OB menu
+	if [[ $(cat $MOUNTPOINT/etc/fstab | grep "swap") != "" ]]; then
+	    cp -f /inst/menu2.xml $MOUNTPOINT/etc/skel/.config/openbox/menu.xml 2>/tmp/.errlog
+		cp -f /inst/menu2.xml $MOUNTPOINT/home/$ISO_USER/.config/openbox/menu.xml 2>/tmp/.errlog
+	else
+	    cp -f /inst/menu.xml $MOUNTPOINT/etc/skel/.config/openbox/menu.xml 2>/tmp/.errlog
+		cp -f /inst/menu.xml $MOUNTPOINT/home/$ISO_USER/.config/openbox/menu.xml 2>/tmp/.errlog
+	fi
+	check_for_error
+
+}
+
+# Set the installed system's hostname
+set_hostname() {
+
+   dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_HostNameTitle" --inputbox "$_HostNameBody" 0 0 "MantOS" 2>${ANSWER} || config_base_menu
+   HOST_NAME=$(cat ${ANSWER})
+
+   echo "$HOST_NAME" > ${MOUNTPOINT}/etc/hostname
+   sed -i "s/$ISO_HOST/$HOST_NAME/g" ${MOUNTPOINT}/etc/hosts
+}
+
+# Set the installed system's root password
+set_root_password() {
+
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_PassRtTitle" --clear --insecure --passwordbox "$_PassRtBody" 0 0 2> ${ANSWER} || config_base_menu
+    PASSWD=$(cat ${ANSWER})
+    
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_PassRtTitle" --clear --insecure --passwordbox "$_PassRtBody2" 0 0 2> ${ANSWER} || config_base_menu
+    PASSWD2=$(cat ${ANSWER})
+    
+    if [[ $PASSWD == $PASSWD2 ]]; then 
+       echo -e "${PASSWD}\n${PASSWD}" > /tmp/.passwd
+       arch_chroot "passwd root" < /tmp/.passwd >/dev/null 2>/tmp/.errlog
+       rm /tmp/.passwd
+       check_for_error
+    else
+       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_PassRtErrTitle" --msgbox "$_PassRtErrBody" 0 0
+       set_root_password
+    fi
+
+}
+
+# Create new user(s) for installed system. First user is created by renaming the live account.
+# All others are brand new.
+create_new_user() {
+
+	dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_NUsrTitle" --inputbox "$_NUsrBody" 0 0 "" 2>${ANSWER} || config_user_menu
+	USER=$(cat ${ANSWER})
+        
+    # Loop while user name is blank, has spaces, or has capital letters in it.
+	while [[ ${#USER} -eq 0 ]] || [[ $USER =~ \ |\' ]] || [[ $USER =~ [^a-z0-9\ ] ]]; do
+          dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_NUsrTitle" --inputbox "$_NUsrErrBody" 0 0 "" 2>${ANSWER} || config_user_menu
+          USER=$(cat ${ANSWER})
+    done
+        
+    # Enter password. This step will only be reached where the loop has been skipped or broken.
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_PassNUsrTitle" --clear --insecure --passwordbox "$_PassNUsrBody $USER\n\n" 0 0 2> ${ANSWER} || config_base_menu
+    PASSWD=$(cat ${ANSWER}) 
+    
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_PassNUsrTitle" --clear --insecure --passwordbox "$_PassNUsrBody2 $USER\n\n" 0 0 2> ${ANSWER} || config_base_menu
+    PASSWD2=$(cat ${ANSWER}) 
+    
+    # loop while passwords entered do not match.
+    while [[ $PASSWD != $PASSWD2 ]]; do
+          dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_PassNUsrErrTitle" --msgbox "$_PassNUsrErrBody" 0 0
+              
+		  dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_PassNUsrTitle" --clear --insecure --passwordbox "$_PassNUsrBody $USER\n\n" 0 0 2> ${ANSWER} || config_base_menu
+          PASSWD=$(cat ${ANSWER}) 
+    
+		  dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_PassNUsrTitle" --clear --insecure --passwordbox "$_PassNUsrBody2 $USER\n\n" 0 0 2> ${ANSWER} || config_base_menu
+		  PASSWD2=$(cat ${ANSWER}) 
+	done
+     
+    # State new new user is being created   
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_NUsrSetTitle" --infobox "$_NUsrSetBody" 0 0
+    sleep 2
+    echo -e "${PASSWD}\n${PASSWD}" > /tmp/.passwd
+
+    # If the first (or only) user account, then change the live account
+	if [[ -e ${MOUNTPOINT}/home/$ISO_USER ]]; then
+	   arch_chroot "passwd $ISO_USER" < /tmp/.passwd >/dev/null 2>>/tmp/.errlog
+	   check_for_error
+        
+	   # Distro-specific configuration for entered username
+	   sed -i "s/$ISO_USER/$USER/g" ${MOUNTPOINT}/home/$ISO_USER/.gtkrc-2.0 2>/tmp/.errlog
+        
+	   # Convert live account to entered username - group, password, folder, and ownership
+	   sed -i "s/$ISO_USER/$USER/g" ${MOUNTPOINT}/etc/group 2>>/tmp/.errlog
+	   sed -i "s/$ISO_USER/$USER/g" ${MOUNTPOINT}/etc/gshadow 2>>/tmp/.errlog
+	   sed -i "s/$ISO_USER/$USER/g" ${MOUNTPOINT}/etc/passwd 2>>/tmp/.errlog
+	   sed -i "s/$ISO_USER/$USER/g" ${MOUNTPOINT}/etc/shadow 2>>/tmp/.errlog
+	   mv ${MOUNTPOINT}/home/$ISO_USER ${MOUNTPOINT}/home/$USER 2>>/tmp/.errlog
+	   chown -R $USER:users ${MOUNTPOINT}/home/$USER 2>>/tmp/.errlog
+        
+	   # Change sudoers file to require passwords for sudo commands
+	   sed -i '/%wheel ALL=(ALL) ALL/s/^#//' ${MOUNTPOINT}/etc/sudoers 2>>/tmp/.errlog
+	   sed -i '/%wheel ALL=(ALL) ALL NOPASSWD: ALL/s/#%wheel ALL=(ALL) ALL NOPASSWD: ALL//' ${MOUNTPOINT}/etc/sudoers 2>>/tmp/.errlog
+	   check_for_error
+	else
+	   # If the live account has already been changed, create a new user account
+	   arch_chroot "useradd ${USER} -m -g users -G wheel,storage,power,network,video,audio,lp -s /bin/bash" 2>/tmp/.errlog   
+	   arch_chroot "passwd ${USER}" < /tmp/.passwd >/dev/null 2>>/tmp/.errlog  
+     
+	   # Set up basic configuration files and ownership for new account
+	   arch_chroot "cp -R /etc/skel/ /home/${USER}" 2>>/tmp/.errlog
+	   arch_chroot "chown -R ${USER}:users /home/${USER}" 2>>/tmp/.errlog
+	   check_for_error
+    fi
+       rm /tmp/.passwd
+}
+
+run_mkinitcpio() {
+	
+  clear
+  
+  # If $LVM is being used, add the lvm2 hook
+  [[ $LVM -eq 1 ]] && sed -i 's/block filesystems/block lvm2 filesystems/g' ${MOUNTPOINT}/etc/mkinitcpio.conf
+    
+  # Amend command depending on whether LTS kernel was installed or not
+  [[ $LTS -eq 1 ]] && arch_chroot "mkinitcpio -p linux-lts" 2>/tmp/.errlog || arch_chroot "mkinitcpio -p linux" 2>/tmp/.errlog
+  check_for_error
+ 
+}
+
+######################################################################
+##																	##
+##            System and Partitioning Functions						##
+##																	##
+######################################################################
+
+
+
+# Unmount partitions.
+umount_partitions(){
+	
+  MOUNTED=""
+  MOUNTED=$(mount | grep "${MOUNTPOINT}" | awk '{print $3}' | sort -r)
+  swapoff -a
+  
+  for i in ${MOUNTED[@]}; do
+      umount $i >/dev/null 2>>/tmp/.errlog
+  done
+  
+  check_for_error
+
+}
+
+# Adapted from AIS
+confirm_mount() {
+    if [[ $(mount | grep $1) ]]; then   
+      dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_MntStatusTitle" --infobox "$_MntStatusSucc" 0 0
+      sleep 2
+      PARTITIONS="$(echo $PARTITIONS | sed s/${PARTITION}$' -'//)"
+      NUMBER_PARTITIONS=$(( NUMBER_PARTITIONS - 1 ))
+    else
+      dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_MntStatusTitle" --infobox "$_MntStatusFail" 0 0
+      sleep 2
+      prep_menu
+    fi
+}
+
+# btrfs specific for subvolumes
+confirm_mount_btrfs() {
+    if [[ $(mount | grep $1) ]]; then
+      dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_MntStatusTitle" --infobox "$_MntStatusSucc\n$(cat ${BTRFS_OPTS})",subvol="${BTRFS_MSUB_VOL}\n\n" 0 0
+      sleep 2
+    else
+      dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_MntStatusTitle" --infobox "$_MntStatusFail" 0 0
+      sleep 2
+      prep_menu
+    fi
+}
+
+# Adapted from AIS. However, this does not assume that the formatted device is the Root
+# installation device; more than one device may be formatted. This is now set in the
+# mount_partitions function, when the Root is chosen.
+select_device() {
+	
+    DEVICE=""
+    devices_list=$(lsblk -d | awk '{print "/dev/" $1}' | grep 'sd\|hd\|vd');
+    
+    for i in ${devices_list[@]}; do
+        DEVICE="${DEVICE} ${i} -"
+    done
+    
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_DevSelTitle" --menu "$_DevSelBody" 0 0 4 ${DEVICE} 2>${ANSWER} || prep_menu
+    DEVICE=$(cat ${ANSWER})
+ 
+  }
+
+# Same as above, but goes to install_base_menu instead where cancelling, and otherwise installs Grub.
+select_grub_device() {
+	
+    GRUB_DEVICE=""
+    grub_devices_list=$(lsblk -d | awk '{print "/dev/" $1}' | grep 'sd\|hd\|vd');
+    
+    for i in ${grub_devices_list[@]}; do
+        GRUB_DEVICE="${GRUB_DEVICE} ${i} -"
+    done
+    
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_DevSelGrubTitle" --menu "$_DevSelBody" 0 0 4 ${GRUB_DEVICE} 2>${ANSWER} || install_base_menu
+    GRUB_DEVICE=$(cat ${ANSWER})
+    clear
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Grub-install " --infobox "$_PlsWaitBody" 0 0
+    sleep 1
+    arch_chroot "grub-install --target=i386-pc --recheck ${GRUB_DEVICE}" 2>/tmp/.errlog
+    check_for_error
+ 
+  }
+
+# Create partitions.
+create_partitions(){
+
+# This only creates the minimum number of partition(s) necessary. Users wishing for other schemes will
+# have to learn to use a partitioning application.
+auto_partition(){
+
+# Deleting partitions in reverse order deals with logical partitions easily.
+delete_partitions(){
+	
+	parted -s ${DEVICE} print | awk '/^ / {print $1}' > /tmp/.del_parts
+	
+	for del_part in $(tac /tmp/.del_parts); do
+		parted -s ${DEVICE} rm ${del_part} 2>/tmp/.errlog
+		check_for_error
+	done
+
+
+}
+ 
+ # Identify the partition table
+ part_table=$(parted -s ${DEVICE} print | grep -i 'partition table' | awk '{print $3}')
+
+ # Autopartition for BIOS systems 
+ if [[ $SYSTEM == "BIOS" ]]; then
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Auto-Partition (BIOS/MBR) " --yesno "$_AutoPartBody1 $DEVICE $_AutoPartBIOSBody2" 0 0
+	
+	if [[ $? -eq 0 ]]; then
+	    delete_partitions
+	    if [[ $part_table != "msdos" ]]; then
+		   parted -s ${DEVICE} mklabel msdos 2>/tmp/.errlog
+		   check_for_error
+		fi
+		parted -s ${DEVICE} mkpart primary ext3 1MiB 100% 2>/tmp/.errlog	
+		parted -s ${DEVICE} set 1 boot on 2>>/tmp/.errlog
+		check_for_error
+        echo -e "Partition Scheme:\n" > /tmp/.devlist
+        lsblk ${DEVICE} -o NAME,TYPE,FSTYPE,SIZE > /tmp/.devlist
+        dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "" --textbox /tmp/.devlist 0 0
+    else
+        create_partitions
+    fi
+ 
+ # Autopartition for UEFI systems   
+ else
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Auto-Partition (UEFI/GPT) " --yesno "$_AutoPartBody1 $DEVICE $_AutoPartUEFIBody2" 0 0
+	
+	if [[ $? -eq 0 ]]; then
+	    delete_partitions
+	    if [[ $part_table != "gpt" ]]; then
+		   parted -s ${DEVICE} mklabel gpt 2>/tmp/.errlog
+		   check_for_error
+		fi
+		parted -s ${DEVICE} mkpart ESP fat32 1MiB 513MiB 2>/tmp/.errlog
+		parted -s ${DEVICE} set 1 boot on 2>>/tmp/.errlog
+		parted -s ${DEVICE} mkpart primary ext3 513MiB 100% 2>>/tmp/.errlog
+		echo -e "Partition Scheme:\n" > /tmp/.devlist
+        lsblk ${DEVICE} -o NAME,TYPE,FSTYPE,SIZE >> /tmp/.devlist
+        dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "" --textbox /tmp/.devlist 0 0
+    else
+		create_partitions
+    fi
+    
+ fi
+
+}
+
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_PartToolTitle" \
+    --menu "$_PartToolBody" 0 0 7 \
+    "1" $"Auto Partition" \
+ 	"2" $"GParted" \
+ 	"3" $"Parted (BIOS & UEFI)" \
+	"4" $"CFDisk (BIOS/MBR)" \
+	"5" $"CGDisk (UEFI/GPT)" \
+	"6" $"FDisk  (BIOS & UEFI)" \
+	"7" $"GDisk  (UEFI/GPT)" 2>${ANSWER}
+
+    case $(cat ${ANSWER}) in
+        "1") auto_partition
+             ;;
+        "2") gparted ${DEVICE} >/dev/null 2>&1
+             ;;
+        "3") clear
+             parted ${DEVICE}
+             ;;
+        "4") cfdisk ${DEVICE}
+             ;;
+        "5") cgdisk ${DEVICE}
+             ;;       
+        "6") clear
+             fdisk ${DEVICE}
+             ;;
+        "7") clear
+             gdisk ${DEVICE}
+             ;;
+          *) prep_menu
+             ;;
+    esac  	
+}	
+
+# find all available partitions and generate a list of them
+# This also includes partitions on different devices.
+find_partitions() {
+
+	PARTITIONS=""
+	NUMBER_PARTITIONS=0
+    partition_list=$(lsblk -l | grep 'part\|lvm' | sed 's/[\t ].*//' | sort -u)
+	
+    for i in ${partition_list[@]}; do
+        PARTITIONS="${PARTITIONS} ${i} -"
+        NUMBER_PARTITIONS=$(( NUMBER_PARTITIONS + 1 ))
+    done
+    
+    # Deal with incorrect partitioning
+    if [[ $NUMBER_PARTITIONS -lt 2 ]] && [[ $SYSTEM == "UEFI" ]]; then
+        dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_UefiPartErrTitle" --msgbox "$_UefiPartErrBody" 0 0
+        create_partitions
+    fi
+    
+    if [[ $NUMBER_PARTITIONS -eq 0 ]] && [[ $SYSTEM == "BIOS" ]]; then
+        dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_BiosPartErrTitle" --msgbox "$_BiosPartErrBody" 0 0	
+        create_partitions
+    fi
+}
+
+# Set static list of filesystems rather than on-the-fly. Partially as most require additional flags, and 
+# partially because some don't seem to be viable.
+select_filesystem(){
+
+# Clear special FS type flags
+BTRFS=0
+
+dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_FSTitle" \
+    --menu "$_FSBody" 0 0 12 \
+ 	"1" "$_FSSkip" \
+ 	"2" $"btrfs" \
+	"3" $"ext2" \
+ 	"4" $"ext3" \
+	"5" $"ext4" \
+	"6" $"f2fs" \
+	"7" $"jfs" \
+ 	"8" $"nilfs2" \
+	"9" $"ntfs" \
+	"10" $"reiserfs" \
+ 	"11" $"vfat" \
+	"12" $"xfs" 2>${ANSWER}	
+
+    case $(cat ${ANSWER}) in
+        "1") FILESYSTEM="skip"
+             ;;
+        "2") FILESYSTEM="mkfs.btrfs -f"
+             modprobe btrfs
+             
+             dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_btrfsSVTitle" --yesno "$_btrfsSVBody" 0 0
+             if [[ $? -eq 0 ]];then
+				BTRFS=2
+		     else
+                BTRFS=1
+             fi
+             
+             ;;
+        "3") FILESYSTEM="mkfs.ext2 -F"
+             ;;
+        "4") FILESYSTEM="mkfs.ext3 -F"
+             ;;            
+        "5") FILESYSTEM="mkfs.ext4 -F"
+             ;;
+        "6") FILESYSTEM="mkfs.f2fs"
+             modprobe f2fs
+             ;;
+        "7") FILESYSTEM="mkfs.jfs -q"
+             ;;
+        "8") FILESYSTEM="mkfs.nilfs2 -f"
+             ;;  
+        "9") FILESYSTEM="mkfs.ntfs -q"
+             ;;  
+        "10") FILESYSTEM="mkfs.reiserfs -f -f"
+             ;;  
+       "11") FILESYSTEM="mkfs.vfat -F32"
+             ;;  
+       "12") FILESYSTEM="mkfs.xfs -f"
+             ;;      
+          *) prep_menu
+             ;;
+    esac
+
+  }
+  
+mount_partitions() {
+
+# function created to save repetition of code. Checks and determines if standard partition or LVM LV,
+# and sets the prefix accordingly.
+set_mount_type() {
+
+[[ $(echo ${PARTITION} | grep 'sd\|hd\|vd[a-z][1-99]') != "" ]] && MOUNT_TYPE="/dev/" || MOUNT_TYPE="/dev/mapper/"
+	
+}
+
+btrfs_subvols() {
+
+ BTRFS_MSUB_VOL=""
+ BTRFS_OSUB_VOL=""
+ BTRFS_MNT=""
+ BTRFS_VOL_LIST="/tmp/.vols"
+ echo "" > ${BTRFS_VOL_LIST}
+ BTRFS_OSUB_NUM=1
+ 
+ dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_btrfsSVTitle" --inputbox "$_btrfsMSubBody1 ${MOUNTPOINT}${MOUNT} $_btrfsMSubBody2" 0 0 "" 2>${ANSWER} || select_filesystem
+ BTRFS_MSUB_VOL=$(cat ${ANSWER})
+ # if root, then create boot flag for syslinux, systemd-boot and rEFInd bootloaders	
+ [[ ${MOUNT} == "" ]] && BTRFS_MNT="rootflags=subvol="$BTRFS_MSUB_VOL
+
+ # Loop while subvolume is blank or has spaces.
+ while [[ ${#BTRFS_MSUB_VOL} -eq 0 ]] || [[ $BTRFS_MSUB_VOL =~ \ |\' ]]; do
+       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_btrfsSVErrTitle" --inputbox "$_btrfsSVErrBody" 0 0 "" 2>${ANSWER} || select_filesystem
+       BTRFS_MSUB_VOL=$(cat ${ANSWER})
+       # if root, then create flag for syslinux, systemd-boot and rEFInd bootloaders
+       [[ ${MOUNT} == "" ]] && BTRFS_MNT="rootflags=subvol="$BTRFS_MSUB_VOL
+ done
+ 
+ # change dir depending on whether root partition or not
+ [[ ${MOUNT} == "" ]] && cd ${MOUNTPOINT} || cd ${MOUNTPOINT}${MOUNT} 2>/tmp/.errlog
+ btrfs subvolume create ${BTRFS_MSUB_VOL} 2>>/tmp/.errlog
+ cd
+ umount ${MOUNT_TYPE}${PARTITION} 2>>/tmp/.errlog
+ check_for_error
+ 
+ # Get any mount options and mount
+ btrfs_mount_opts
+ if [[ $(cat ${BTRFS_OPTS}) != "" ]]; then
+	[[ ${MOUNT} == "" ]] && mount -o $(cat ${BTRFS_OPTS})",subvol="${BTRFS_MSUB_VOL} ${MOUNT_TYPE}${PARTITION} ${MOUNTPOINT} 2>/tmp/.errlog || mount -o $(cat ${BTRFS_OPTS})",subvol="${BTRFS_MSUB_VOL} ${MOUNT_TYPE}${PARTITION} ${MOUNTPOINT}${MOUNT} 2>/tmp/.errlog
+ else
+    [[ ${MOUNT} == "" ]] &&	mount -o "subvol="${BTRFS_MSUB_VOL} ${MOUNT_TYPE}${PARTITION} ${MOUNTPOINT} 2>/tmp/.errlog || mount -o "subvol="${BTRFS_MSUB_VOL} ${MOUNT_TYPE}${PARTITION} ${MOUNTPOINT}${MOUNT} 2>/tmp/.errlog
+ fi
+ 
+ # Check for error and confirm successful mount
+ check_for_error  
+ [[ ${MOUNT} == "" ]] && confirm_mount_btrfs ${MOUNTPOINT} || confirm_mount_btrfs ${MOUNTPOINT}${MOUNT}
+ 
+ # Now create the subvolumes   
+ [[ ${MOUNT} == "" ]] && cd ${MOUNTPOINT} || cd ${MOUNTPOINT}${MOUNT} 2>/tmp/.errlog
+ check_for_error
+ 
+ # Loop while the termination character has not been entered
+ while [[ $BTRFS_OSUB_VOL != "*" ]]; do
+	dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_btrfsSVTitle ($BTRFS_MSUB_VOL) " --inputbox "$_btrfsSVBody1 $BTRFS_OSUB_NUM $_btrfsSVBody2 $BTRFS_MSUB_VOL.$_btrfsSVBody3 $(cat ${BTRFS_VOL_LIST})" 0 0 "" 2>${ANSWER} || select_filesystem
+	BTRFS_OSUB_VOL=$(cat ${ANSWER})	
+
+    # Loop while subvolume is blank or has spaces.
+    while [[ ${#BTRFS_OSUB_VOL} -eq 0 ]] || [[ $BTRFS_SUB_VOL =~ \ |\' ]]; do
+       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_btrfsSVErrTitle ($BTRFS_MSUB_VOL) " --inputbox "$_btrfsSVErrBody ($BTRFS_OSUB_NUM)." 0 0 "" 2>${ANSWER} || select_filesystem
+       BTRFS_OSUB_VOL=$(cat ${ANSWER})
+    done
+ 
+    btrfs subvolume create ${BTRFS_OSUB_VOL} 2>/tmp/.errlog 
+    check_for_error
+    BTRFS_OSUB_NUM=$(( BTRFS_OSUB_NUM + 1 ))
+    echo $BTRFS_OSUB_VOL" " >> ${BTRFS_VOL_LIST}
+ done
+ 
+ # Show the subvolumes created
+ echo -e "btrfs subvols:\n" > /tmp/.subvols
+ ls  >> /tmp/.subvols
+ dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --textbox /tmp/.subvols 0 0
+ cd
+}
+
+# This function allows for btrfs-specific mounting options to be applied. Written as a seperate function
+# for neatness.
+btrfs_mount_opts() {
+
+	echo "" > ${BTRFS_OPTS}
+
+	dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_btrfsMntTitle" --checklist "$_btrfsMntBody" 0 0 16 \
+	"1" "autodefrag" off \
+	"2" "compress=zlib" off \
+	"3" "compress=lzo" off \
+	"4" "compress=no" off \
+	"5" "compress-force=zlib" off \
+	"6" "compress-force=lzo" off \
+	"7" "discard" off \
+	"8" "noacl" off \
+    "9" "noatime" off \
+   "10" "nodatasum" off \
+   "11" "nospace_cache" off \
+   "12" "recovery" off \
+   "13" "skip_balance" off \
+   "14" "space_cache" off  \
+   "15" "ssd" off \
+   "16" "ssd_spread" off 2>${BTRFS_OPTS}
+ 
+   # Double-digits first       
+   sed -i 's/10/nodatasum,/' ${BTRFS_OPTS}
+   sed -i 's/11/nospace_cache,/' ${BTRFS_OPTS}
+   sed -i 's/12/recovery,/' ${BTRFS_OPTS}
+   sed -i 's/13/skip_balance,/' ${BTRFS_OPTS}
+   sed -i 's/14/space_cache,/' ${BTRFS_OPTS}
+   sed -i 's/15/ssd,/' ${BTRFS_OPTS}
+   sed -i 's/16/ssd_spread,/' ${BTRFS_OPTS}
+   # then single digits
+   sed -i 's/1/autodefrag,/' ${BTRFS_OPTS}
+   sed -i 's/2/compress=zlib,/' ${BTRFS_OPTS}
+   sed -i 's/3/compress=lzo,/' ${BTRFS_OPTS}
+   sed -i 's/4/compress=no,/' ${BTRFS_OPTS}
+   sed -i 's/5/compress-force=zlib,/' ${BTRFS_OPTS}
+   sed -i 's/6/compress-force=lzo,/' ${BTRFS_OPTS}
+   sed -i 's/7/noatime,/' ${BTRFS_OPTS}
+   sed -i 's/8/noacl,/' ${BTRFS_OPTS}
+   sed -i 's/9/noatime,/' ${BTRFS_OPTS}
+   # Now clean up the file
+   sed -i 's/ //g' ${BTRFS_OPTS}
+   sed -i '$s/,$//' ${BTRFS_OPTS}
+
+   
+   if [[ $(cat ${BTRFS_OPTS}) != "" ]]; then
+	  dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_btrfsMntTitle" --yesno "$_btrfsMntConfBody $(cat $BTRFS_OPTS)\n" 0 0 
+	  [[ $? -eq 1 ]] && btrfs_mount_opts
+   fi  
+
+}
+
+    # LVM Detection. If detected, activate.
+    detect_lvm
+    if [[ $LVM -eq 1 ]]; then
+       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmDetTitle" --infobox "$_LvmDetBody2" 0 0
+       sleep 2   
+       modprobe dm-mod 2>/tmp/.errlog
+       check_for_error
+       vgscan >/dev/null 2>&1
+       vgchange -ay >/dev/null 2>&1
+    fi
+
+	# Ensure partitions are unmounted (i.e. where mounted previously), and then list available partitions
+    umount_partitions
+	find_partitions
+	
+	# Identify and mount root
+	dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_SelRootTitle" --menu "$_SelRootBody" 0 0 4 ${PARTITIONS} 2>${ANSWER} || prep_menu
+	PARTITION=$(cat ${ANSWER})
+    ROOT_PART=${PARTITION}
+    set_mount_type
+    
+    # This is to identify the device for Grub installations.
+    if [[ $MOUNT_TYPE == "/dev/" ]]; then   
+       LVM_ROOT=0
+       INST_DEV=${MOUNT_TYPE}$(cat ${ANSWER} | sed 's/[0-9]*//g')
+    else
+       LVM_ROOT=1
+    fi
+    	
+	select_filesystem
+	[[ $FILESYSTEM != "skip" ]] && ${FILESYSTEM} ${MOUNT_TYPE}${PARTITION} >/dev/null 2>/tmp/.errlog
+	check_for_error
+	
+	# Make the root directory
+	mkdir -p ${MOUNTPOINT} 2>/tmp/.errlog
+
+    # If btrfs without subvolumes has been selected, get the mount options
+    [[ $BTRFS -eq 1 ]] && btrfs_mount_opts
+    
+    # If btrfs has been selected without subvolumes - and at least one btrfs mount option selected - then
+	# mount with options. Otherwise, basic mount.
+	if [[ $BTRFS -eq 1 ]] && [[ $(cat ${BTRFS_OPTS}) != "" ]]; then
+	   mount -o $(cat ${BTRFS_OPTS}) ${MOUNT_TYPE}${PARTITION} ${MOUNTPOINT} 2>>/tmp/.errlog
+	else
+	   mount ${MOUNT_TYPE}${PARTITION} ${MOUNTPOINT} 2>>/tmp/.errlog
+    fi
+	  
+	# Check for error, confirm mount, and deal with BTRFS with subvolumes if applicable  
+	check_for_error
+    confirm_mount ${MOUNTPOINT}
+    [[ $BTRFS -eq 2 ]] && btrfs_subvols
+	
+	# Identify and create swap, if applicable
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_SelSwpTitle" --menu "$_SelSwpBody" 0 0 4 "$_SelSwpNone" $"-" "$_SelSwpFile" $"-" ${PARTITIONS} 2>${ANSWER} || prep_menu  
+    if [[ $(cat ${ANSWER}) != "$_SelSwpNone" ]]; then    
+       PARTITION=$(cat ${ANSWER})
+       
+       if [[ $PARTITION == "$_SelSwpFile" ]]; then
+          total_memory=`grep MemTotal /proc/meminfo | awk '{print $2/1024}' | sed 's/\..*//'`
+          fallocate -l ${total_memory}M ${MOUNTPOINT}/swapfile >/dev/null 2>/tmp/.errlog
+          check_for_error
+          chmod 600 ${MOUNTPOINT}/swapfile >/dev/null 2>&1
+          mkswap ${MOUNTPOINT}/swapfile >/dev/null 2>&1
+          swapon ${MOUNTPOINT}/swapfile >/dev/null 2>&1
+       else
+          set_mount_type
+          mkswap  ${MOUNT_TYPE}${PARTITION} >/dev/null 2>/tmp/.errlog
+          swapon  ${MOUNT_TYPE}${PARTITION} >/dev/null 2>>/tmp/.errlog
+          check_for_error
+          # Since a partition was used, remove that partition from the list
+          PARTITIONS="$(echo $PARTITIONS | sed s/${PARTITION}$' -'//)"
+          NUMBER_PARTITIONS=$(( NUMBER_PARTITIONS - 1 ))
+       fi
+    fi
+    
+    # Extra Step for VFAT UEFI Partition. This cannot be in an LVM container.
+    if [[ $SYSTEM == "UEFI" ]]; then
+    
+       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_SelUefiTitle" --menu "$_SelUefiBody" 0 0 4 ${PARTITIONS} 2>${ANSWER} || config_base_menu  
+       PARTITION=$(cat ${ANSWER})
+       UEFI_PART=$"/dev/"${PARTITION}
+       
+       # If it is already a fat/vfat partition...
+       if [[ $(fsck -N /dev/$PARTITION | grep fat) ]]; then
+          dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_FormUefiTitle" --yesno "$_FormUefiBody $PARTITION $_FormUefiBody2" 0 0 && mkfs.vfat -F32 $"/dev/"${PARTITION} >/dev/null 2>/tmp/.errlog
+       else 
+          mkfs.vfat -F32 $"/dev/"${PARTITION} >/dev/null 2>/tmp/.errlog
+       fi
+       check_for_error
+       
+       # Inform users of the mountpoint options and consequences       
+       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_MntUefiTitle" --menu "$_MntUefiBody"  0 0 2 \
+ 	   "1" $"/boot" \
+	   "2" $"/boot/efi" 2>${ANSWER}
+       
+       case $(cat ${ANSWER}) in
+        "1") UEFI_MOUNT="/boot"
+             ;;
+        "2") UEFI_MOUNT="/boot/efi"
+             ;;
+          *) config_base_menu
+             ;;
+       esac
+       
+       mkdir -p ${MOUNTPOINT}${UEFI_MOUNT} 2>/tmp/.errlog
+       mount $"/dev/"${PARTITION} ${MOUNTPOINT}${UEFI_MOUNT} 2>>/tmp/.errlog
+       check_for_error
+       confirm_mount ${MOUNTPOINT}${UEFI_MOUNT}     
+       
+    fi
+    
+    # All other partitions
+       while [[ $NUMBER_PARTITIONS > 0 ]]; do 
+             dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_ExtPartTitle" --menu "$_ExtPartBody" 0 0 4 "$_Done" $"-" ${PARTITIONS} 2>${ANSWER} || config_base_menu 
+             PARTITION=$(cat ${ANSWER})
+             set_mount_type
+             
+             if [[ $PARTITION == ${_Done} ]]; then
+                break;
+             else
+                MOUNT=""
+                
+                select_filesystem 
+                [[ $FILESYSTEM != "skip" ]] && ${FILESYSTEM} ${MOUNT_TYPE}${PARTITION} >/dev/null 2>/tmp/.errlog
+	            check_for_error
+	            
+                # Don't give /boot as an example for UEFI systems!
+                if [[ $SYSTEM == "UEFI" ]]; then
+                   dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_ExtNameTitle $PARTITON " --inputbox "$_ExtNameBodyUefi" 0 0 "/" 2>${ANSWER} || config_base_menu
+                else
+                   dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_ExtNameTitle $PARTITON " --inputbox "$_ExtNameBodyBios" 0 0 "/" 2>${ANSWER} || config_base_menu
+                fi
+                MOUNT=$(cat ${ANSWER})
+                
+                # loop if the mountpoint specified is incorrect (is only '/', is blank, or has spaces). 
+                while [[ ${MOUNT:0:1} != "/" ]] || [[ ${#MOUNT} -le 1 ]] || [[ $MOUNT =~ \ |\' ]]; do
+                      dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_ExtErrTitle" --msgbox "$_ExtErrBody" 0 0
+                      
+                      # Don't give /boot as an example for UEFI systems!
+                      if [[ $SYSTEM == "UEFI" ]]; then
+                         dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_ExtNameTitle $PARTITON " --inputbox "$_ExtNameBodyUefi" 0 0 "/" 2>${ANSWER} || config_base_menu
+                      else
+                         dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_ExtNameTitle $PARTITON " --inputbox "$_ExtNameBodyBios" 0 0 "/" 2>${ANSWER} || config_base_menu
+                      fi
+                      MOUNT=$(cat ${ANSWER})                     
+                done
+
+                # Create directory and mount. This step will only be reached where the loop has been skipped or broken.
+                mkdir -p ${MOUNTPOINT}${MOUNT} 2>/tmp/.errlog
+                
+                # If btrfs without subvolumes has been selected, get the mount options
+                [[ $BTRFS -eq 1 ]] && btrfs_mount_opts
+    
+                # If btrfs has been selected without subvolumes - and at least one btrfs mount option selected - then
+	            # mount with options. Otherwise, basic mount.
+	            if [[ $BTRFS -eq 1 ]] && [[ $(cat ${BTRFS_OPTS}) != "" ]]; then
+					mount -o $(cat ${BTRFS_OPTS}) ${MOUNT_TYPE}${PARTITION} ${MOUNTPOINT}${MOUNT} 2>>/tmp/.errlog
+				else
+					mount ${MOUNT_TYPE}${PARTITION} ${MOUNTPOINT}${MOUNT} 2>>/tmp/.errlog
+				fi
+	  
+				# Check for error, confirm mount, and deal with BTRFS with subvolumes if applicable  
+				check_for_error
+				confirm_mount ${MOUNTPOINT}${MOUNT}
+				[[ $BTRFS -eq 2 ]] && btrfs_subvols
+                
+                # Determine if a seperate /boot is used, and if it is LVM or not
+                LVM_SEP_BOOT=0
+                if [[ $MOUNT == "/boot" ]]; then
+                   [[ $MOUNT_TYPE == "/dev/" ]] && LVM_SEP_BOOT=1 || LVM_SEP_BOOT=2
+                fi                   
+             fi
+       done
+}	
+
+######################################################################
+##																	##
+##             Logical Volume Management Functions			    	##
+##																	##
+######################################################################
+
+
+# LVM Detection.
+detect_lvm() {
+
+  LVM_PV=$(pvs -o pv_name --noheading 2>/dev/null)
+  LVM_VG=$(vgs -o vg_name --noheading 2>/dev/null)
+  LVM_LV=$(lvs -o vg_name,lv_name --noheading --separator - 2>/dev/null)
+  
+  if [[ $LVM_LV = "" ]] && [[ $LVM_VG = "" ]] && [[ $LVM_PV = "" ]]; then
+     LVM=0
+  else
+     LVM=1
+  fi
+ 
+}
+
+# Where existing LVM is found, offer to deactivate it. Code adapted from the Manjaro installer.
+# NEED TO ADD COMMAND TO REMOVE LVM2 FSTYPE.
+deactivate_lvm() {
+
+ LVM_DISABLE=0
+
+    if [[ $LVM -eq 1 ]]; then
+       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmDetTitle" --yesno "$_LvmDetBody1" 0 0 \
+       && LVM_DISABLE=1 || LVM_DISABLE=0
+    fi
+    
+    if [[ $LVM_DISABLE -eq 1 ]]; then
+       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmRmTitle" --infobox "$_LvmRmBody" 0 0
+       sleep 2
+       
+        for i in ${LVM_LV}; do
+            lvremove -f /dev/mapper/${i} >/dev/null 2>&1
+        done
+
+        for i in ${LVM_VG}; do
+            vgremove -f ${i} >/dev/null 2>&1
+        done
+
+        for i in ${LV_PV}; do
+            pvremove -f ${i} >/dev/null 2>&1
+        done
+        
+        # This step will remove old lvm metadata on partitions where identified.
+        LVM_PT=$(lvmdiskscan | grep 'LVM physical volume' | grep 'sd[a-z]' | sed 's/\/dev\///' | awk '{print $1}')
+        for i in ${LVM_PT}; do
+            dd if=/dev/zero bs=512 count=512 of=/dev/${i} >/dev/null 2>&1
+        done
+    fi
+
+}
+
+# Find and create a list of partitions that can be used for LVM. Partitions already used are excluded.
+find_lvm_partitions() {
+
+    LVM_PARTITIONS=""
+    NUMBER_LVM_PARTITIONS=0
+    lvm_partition_list=$(lvmdiskscan | grep -v 'LVM physical volume' | grep 'sd[a-z][1-99]' | sed 's/\/dev\///' | awk '{print $1}')
+	
+    for i in ${lvm_partition_list[@]}; do
+        LVM_PARTITIONS="${LVM_PARTITIONS} ${i} -"
+        NUMBER_LVM_PARTITIONS=$(( NUMBER_LVM_PARTITIONS + 1 ))
+    done
+    
+}
+
+# This simplifies the creation of the PV and VG into a single step.
+create_lvm() {
+
+# subroutine to save a lot of repetition.
+check_lv_size() {
+
+  LV_SIZE_INVALID=0
+  LV_SIZE_TYPE=$(echo ${LVM_LV_SIZE:$(( ${#LVM_LV_SIZE} - 1 )):1})
+  chars=0
+  
+  # Check to see if anything was actually entered
+  [[ ${#LVM_LV_SIZE} -eq 0 ]] && LV_SIZE_INVALID=1
+
+  # Check if there are any non-numeric characters prior to the last one
+  while [[ $chars -lt $(( ${#LVM_LV_SIZE} - 1 )) ]]; do
+        if [[ ${LVM_LV_SIZE:chars:1} != [0-9] ]]; then
+           LV_SIZE_INVALID=1
+           break;
+        fi
+        chars=$(( chars + 1 ))
+  done
+
+  # Check to see if first character is '0'
+  [[ ${LVM_LV_SIZE:0:1} -eq "0" ]] && LV_SIZE_INVALID=1
+
+  # Check to see if last character is "G" or "M", and if so, whether the value is greater than
+  # or equal to the LV remaining Size. If not, convert into MB for VG space remaining.      
+  if [[ ${LV_SIZE_INVALID} -eq 0 ]]; then
+      case ${LV_SIZE_TYPE} in
+         "G") if [[ $(( $(echo ${LVM_LV_SIZE:0:$(( ${#LVM_LV_SIZE} - 1 ))}) * 1000 )) -ge ${LVM_VG_MB} ]]; then
+                 LV_SIZE_INVALID=1
+              else
+                 LVM_VG_MB=$(( LVM_VG_MB - $(( $(echo ${LVM_LV_SIZE:0:$(( ${#LVM_LV_SIZE} - 1 ))}) * 1000 )) ))
+              fi
+              ;;
+         "M") if [[ $(echo ${LVM_LV_SIZE:0:$(( ${#LVM_LV_SIZE} - 1 ))}) -ge ${LVM_VG_MB} ]]; then
+                 LV_SIZE_INVALID=1
+              else
+                 LVM_VG_MB=$(( LVM_VG_MB - $(echo ${LVM_LV_SIZE:0:$(( ${#LVM_LV_SIZE} - 1 ))}) ))
+              fi
+              ;;
+           *) LV_SIZE_INVALID=1
+              ;;
+      esac
+  fi
+      
+}
+
+	# Check that there is at least one partition available for LVM
+    if [[ $NUMBER_LVM_PARTITIONS -lt 1 ]]; then
+        dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmPartErrTitle" --msgbox "$_LvmPartErrBody" 0 0
+        prep_menu
+    fi
+    
+    # Create a temporary file to store the partition(s) selected. This is later used for the vgcreate command. 'x' is used as a marker.
+    echo "x" > /tmp/.vgcreate
+    
+    # Name the Volume Group
+    LVM_VG=""
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmNameVgTitle" --inputbox "$_LvmNameVgBody" 0 0 "" 2>${ANSWER} || prep_menu
+    LVM_VG=$(cat ${ANSWER})
+
+    # Loop while the Volume Group name starts with a "/", is blank, has spaces, or is already being used
+    while [[ ${LVM_VG:0:1} == "/" ]] || [[ ${#LVM_VG} -eq 0 ]] || [[ $LVM_VG =~ \ |\' ]] || [[ $(lsblk | grep ${LVM_VG}) != "" ]]; do
+        dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmNameVgErrTitle" --msgbox "$_LvmNameVgErr" 0 0
+              
+        dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmNameVgTitle" --inputbox "$_LvmNameVgBody" 0 0 "" 2>${ANSWER} || prep_menu
+        LVM_VG=$(cat ${ANSWER})
+    done
+    
+    # Select the first or only partition for the Volume Group
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmPvSelTitle" --menu "$_LvmPvSelBody" 0 0 4 ${LVM_PARTITIONS} 2>${ANSWER} || prep_menu 
+    LVM_PARTITION=$(cat ${ANSWER})
+    
+    # add the partition to the temporary file for the vgcreate command
+    # Remove selected partition from the list and deduct number of LVM viable partitions remaining
+    sed -i "s/x/\/dev\/${LVM_PARTITION} x/" /tmp/.vgcreate
+    LVM_PARTITIONS="$(echo $LVM_PARTITIONS | sed s/${LVM_PARTITION}$' -'//)"
+    NUMBER_LVM_PARTITIONS=$(( NUMBER_LVM_PARTITIONS - 1 ))
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmPvCreateTitle" --infobox "\n$_Done\n\n" 0 0
+    sleep 1
+
+    # Where there are viable partitions still remaining, run loop
+    while [[ $NUMBER_LVM_PARTITIONS -gt 0 ]]; do
+
+           dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmPvSelTitle" --menu "$_LvmPvSelBody" 0 0 4 $"Done" $"-" ${LVM_PARTITIONS} 2>${ANSWER} || prep_menu 
+           LVM_PARTITION=$(cat ${ANSWER})
+
+           if [[ $LVM_PARTITION == "Done" ]]; then
+              break;
+           else
+              sed -i "s/x/\/dev\/${LVM_PARTITION} x/" /tmp/.vgcreate
+              LVM_PARTITIONS="$(echo $LVM_PARTITIONS | sed s/${LVM_PARTITION}$' -'//)"
+              NUMBER_LVM_PARTITIONS=$(( NUMBER_LVM_PARTITIONS - 1 ))
+              dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmPvCreateTitle" --infobox "\n$_Done\n\n" 0 0
+              sleep 1
+           fi
+
+    done
+
+    # Once all the partitions have been selected, remove 'x' from the .vgcreate file, then use it in 'vgcreate' command.
+    # Also determine the size of the VG, to use for creating LVs for it.
+    VG_PARTS=$(cat /tmp/.vgcreate | sed 's/x//')
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmPvConfTitle" --yesno "$_LvmPvConfBody1${LVM_VG} $_LvmPvConfBody2${VG_PARTS}" 0 0
+    
+    if [[ $? -eq 0 ]]; then
+       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmPvActTitle" --infobox "$_LvmPvActBody1${LVM_VG}.$_LvmPvActBody2" 0 0
+       sleep 2
+       vgcreate -f ${LVM_VG} ${VG_PARTS} >/dev/null 2>/tmp/.errlog
+       check_for_error
+       VG_SIZE=$(vgdisplay | grep 'VG Size' | awk '{print $3}' | sed 's/\..*//')
+       VG_SIZE_TYPE=$(vgdisplay | grep 'VG Size' | awk '{print $4}' | sed 's/\..*//')
+       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmPvDoneTitle" --msgbox "$_LvmPvDoneBody1 '${LVM_VG}' $_LvmPvDoneBody2 (${VG_SIZE} ${VG_SIZE_TYPE}).\n\n" 0 0
+       sleep 2
+    else
+       prep_menu
+    fi
+
+    # Convert the VG size into GB and MB. These variables are used to keep tabs on space available and remaining
+    [[ ${VG_SIZE_TYPE:0:1} == "G" ]] && LVM_VG_MB=$(( VG_SIZE * 1000 )) || LVM_VG_MB=$VG_SIZE
+    
+    # Specify number of Logical volumes to create.
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvNumTitle" --inputbox "$_LvmLvNumBody1 ${LVM_VG}.$_LvmLvNumBody2" 0 0 "" 2>${ANSWER} || prep_menu
+    NUMBER_LOGICAL_VOLUMES=$(cat ${ANSWER})
+    
+    # Loop if the number of LVs is no 1-9 (including non-valid characters)
+    while [[ $NUMBER_LOGICAL_VOLUMES != [1-9] ]]; do
+          dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvNumErrTitle" --msgbox "$_LvmLvNumErrBody" 0 0
+ 
+          dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvNumTitle" --inputbox "$_LvmLvNumBody1 ${LVM_VG}.$_LvmLvNumBody2" 0 0 "" 2>${ANSWER} || prep_menu
+          NUMBER_LOGICAL_VOLUMES=$(cat ${ANSWER})
+    done
+
+    # Loop while the number of LVs is greater than 1. This is because the size of the last LV is automatic.
+    while [[ $NUMBER_LOGICAL_VOLUMES -gt 1 ]]; do
+          dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvNameTitle" --inputbox "$_LvmLvNameBody1" 0 0 "lvol" 2>${ANSWER} || prep_menu
+          LVM_LV_NAME=$(cat ${ANSWER})
+
+          # Loop if preceeded with a "/", if nothing is entered, if there is a space, or if that name already exists.
+          while [[ ${LVM_LV_NAME:0:1} == "/" ]] || [[ ${#LVM_LV_NAME} -eq 0 ]] || [[ ${LVM_LV_NAME} =~ \ |\' ]] || [[ $(lsblk | grep ${LVM_LV_NAME}) != "" ]]; do
+              dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvNameErrTitle" --msgbox "$_LvmLvNameErrBody" 0 0
+
+              dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvNameTitle" --inputbox "$_LvmLvNameBody1" 0 0 "lvol" 2>${ANSWER} || prep_menu
+              LVM_LV_NAME=$(cat ${ANSWER})
+          done
+
+          dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvSizeTitle" --inputbox "\n${LVM_VG}: ${VG_SIZE}${VG_SIZE_TYPE} (${LVM_VG_MB}MB $_LvmLvSizeBody1).$_LvmLvSizeBody2" 0 0 "" 2>${ANSWER} || prep_menu
+          LVM_LV_SIZE=$(cat ${ANSWER})          
+          check_lv_size 
+          
+          # Loop while an invalid value is entered.
+          while [[ $LV_SIZE_INVALID -eq 1 ]]; do
+                dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvSizeErrTitle" --msgbox "$_LvmLvSizeErrBody" 0 0
+          
+                dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvSizeTitle" --inputbox "\n${LVM_VG}: ${VG_SIZE}${VG_SIZE_TYPE} (${LVM_VG_MB}MB $_LvmLvSizeBody1).$_LvmLvSizeBody2" 0 0 "" 2>${ANSWER} || prep_menu
+                LVM_LV_SIZE=$(cat ${ANSWER})          
+                check_lv_size
+          done
+          
+          # Create the LV
+          lvcreate -L ${LVM_LV_SIZE} ${LVM_VG} -n ${LVM_LV_NAME} 2>/tmp/.errlog
+          check_for_error
+          dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvDoneTitle" --msgbox "\n$_Done\n\nLV ${LVM_LV_NAME} (${LVM_LV_SIZE}) $_LvmPvDoneBody2.\n\n" 0 0
+          NUMBER_LOGICAL_VOLUMES=$(( NUMBER_LOGICAL_VOLUMES - 1 ))
+    done
+    
+    # Now the final LV. Size is automatic.      
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvNameTitle" --inputbox "$_LvmLvNameBody1 $_LvmLvNameBody2 (${LVM_VG_MB}MB)." 0 0 "lvol" 2>${ANSWER} || prep_menu
+    LVM_LV_NAME=$(cat ${ANSWER})
+
+          # Loop if preceeded with a "/", if nothing is entered, if there is a space, or if that name already exists.
+          while [[ ${LVM_LV_NAME:0:1} == "/" ]] || [[ ${#LVM_LV_NAME} -eq 0 ]] || [[ ${LVM_LV_NAME} =~ \ |\' ]] || [[ $(lsblk | grep ${LVM_LV_NAME}) != "" ]]; do
+              dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvNameErrTitle" --msgbox "$_LvmLvNameErrBody" 0 0
+
+              dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmLvNameTitle" --inputbox "$_LvmLvNameBody1 $_LvmLvNameBody2 (${LVM_VG_MB}MB)." 0 0 "lvol" 2>${ANSWER} || prep_menu
+              LVM_LV_NAME=$(cat ${ANSWER})
+          done
+
+    # Create the final LV
+    lvcreate -l +100%FREE ${LVM_VG} -n ${LVM_LV_NAME} 2>/tmp/.errlog
+    check_for_error
+    NUMBER_LVM_PARTITIONS=$(( NUMBER_LVM_PARTITIONS - 1 ))
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_LvmCompTitle" --yesno "$_LvmCompBody" 0 0 \
+    && show_devices || prep_menu
+}
+
+######################################################################
+##																	##
+##                    Installation Functions						##
+##																	##
+######################################################################	
+
+install_root(){
+
+  clear
+
+  # Change installation method depending on use of img or sfs
+  if [[ -e /run/archiso/sfs/airootfs/airootfs.img ]]; then
+     AIROOTIMG="/run/archiso/sfs/airootfs/airootfs.img"
+     mkdir -p ${BYPASS} 2>/tmp/.errlog
+	 mount ${AIROOTIMG} ${BYPASS} 2>>/tmp/.errlog
+	 rsync -a --progress ${BYPASS} ${MOUNTPOINT}/ 2>>/tmp/.errlog
+	 umount -l ${BYPASS}
+  else
+     AIROOTIMG="/run/archiso/sfs/airootfs/"
+     rsync -a --progress ${AIROOTIMG} ${MOUNTPOINT}/ 2>/tmp/.errlog
+  fi
+
+  check_for_error
+  
+  # Keyboard config for vc and x11
+  [[ -e /tmp/vconsole.conf ]] && cp /tmp/vconsole.conf ${MOUNTPOINT}/etc/vconsole.conf 2>>/tmp/.errlog
+  [[ -e /tmp/01-keyboard-layout.conf ]] && cp -f /tmp/01-keyboard-layout.conf ${MOUNTPOINT}/etc/X11/xorg.conf.d/$(ls ${MOUNTPOINT}/etc/X11/xorg.conf.d/ | grep "keyboard") 2>>/tmp/.errlog
+  
+  # set up kernel for mkiniticpio
+  cp /run/archiso/bootmnt/arch/boot/${ARCHI}/vmlinuz ${MOUNTPOINT}/boot/vmlinuz-linux 2>>/tmp/.errlog
+
+  # copy over new mirrorlist
+  cp /etc/pacman.d/mirrorlist ${MOUNTPOINT}/etc/pacman.d/mirrorlist 2>>/tmp/.errlog
+  
+  # Clean up installation
+  [[ -d ${MOUNTPOINT}/abif-master ]] && rm -R ${MOUNTPOINT}/abif-master 2>>/tmp/.errlog
+  [[ -d ${MOUNTPOINT}/aif-master ]] && rm -R ${MOUNTPOINT}/abif-master 2>>/tmp/.errlog
+  [[ -d ${MOUNTPOINT}/inst ]] && rm -R ${MOUNTPOINT}/inst &> /dev/null 2>>/tmp/.errlog
+  rm -f ${MOUNTPOINT}/usr/bin/lastmin 2>>/tmp/.errlog
+  rm -rf ${MOUNTPOINT}/vomi 2>>/tmp/.errlog
+  rm -rf ${BYPASS} 2>>/tmp/.errlog
+  rm -rf ${MOUNTPOINT}/source 2>>/tmp/.errlog
+  rm -rf ${MOUNTPOINT}/src 2>>/tmp/.errlog
+  rmdir ${MOUNTPOINT}/bypass 2>>/tmp/.errlog
+  rmdir ${MOUNTPOINT}/src 2>>/tmp/.errlog
+  rmdir ${MOUNTPOINT}/source 2>>/tmp/.errlog
+  rm -f ${MOUNTPOINT}/etc/sudoers.d/g_wheel 2>>/tmp/.errlog
+  rm -f ${MOUNTPOINT}/var/lib/NetworkManager/NetworkManager.state 2>>/tmp/.errlog
+  rm -f ${MOUNTPOINT}/update-abif 2>>/tmp/.errlog
+  sed -i 's/.*pam_wheel\.so/#&/' ${MOUNTPOINT}/etc/pam.d/su 2>>/tmp/.errlog
+ 
+  # clean out archiso files from install
+  find ${MOUNTPOINT}/usr/lib/initcpio -name archiso* -type f -exec rm '{}' \;
+ 
+  # systemd
+  rm -R ${MOUNTPOINT}/etc/systemd/system/getty@tty1.service.d 2>>/tmp/.errlog
+  rm ${MOUNTPOINT}/etc/systemd/system/default.target 2>>/tmp/.errlog
+
+
+  # Journal 
+  sed -i 's/volatile/auto/g' ${MOUNTPOINT}/etc/systemd/journald.conf 2>>/tmp/.errlog
+ 
+  # Stop pacman complaining
+  arch_chroot "mkdir -p /var/lib/pacman/sync" 2>>/tmp/.errlog
+  arch_chroot "touch /var/lib/pacman/sync/{core.db,extra.db,community.db}" 2>>/tmp/.errlog
+
+  # Fix NetworkManager
+  arch_chroot "systemctl enable NetworkManager -f" 2>>/tmp/.errlog
+
+  # Keyboard config for vc and x11
+  [[ -e /tmp/vconsole.conf ]] && cp /tmp/vconsole.conf ${MOUNTPOINT}/etc/vconsole.conf 2>>/tmp/.errlog
+  [[ -e /tmp/01-keyboard-layout.conf ]] && cp -f /tmp/01-keyboard-layout.conf ${MOUNTPOINT}/etc/X11/xorg.conf.d/$(ls ${MOUNTPOINT}/etc/X11/xorg.conf.d/ | grep "keyboard") 2>>/tmp/.errlog
+  check_for_error
+}
+
+# Install Bootloader
+install_bootloader() {
+
+bios_bootloader() {	
+	
+   dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_InstBiosBtTitle" \
+    --menu "$_InstBiosBtBody" 0 0 2 \
+ 	"1" $"Grub2" \
+	"2" $"Syslinux" 2>${ANSWER}
+	
+	case $(cat ${ANSWER}) in
+        "1") # GRUB
+             if [[ $LVM_ROOT -eq 1 ]]; then
+                select_grub_device
+             else
+                dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_InstGrubDevTitle" --yesno "$_InstGrubDevBody ($INST_DEV)?$_InstGrubDevBody2" 0 0
+                
+                if [[ $? -eq 0 ]]; then
+			       clear
+			       dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Grub-install " --infobox "$_PlsWaitBody" 0 0
+                   sleep 1 
+			       arch_chroot "grub-install --target=i386-pc --recheck ${INST_DEV}" 2>/tmp/.errlog
+			       check_for_error
+			    else   
+			       select_grub_device
+			    fi
+			    
+			 fi
+                       
+             arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg" 2>/tmp/.errlog
+             check_for_error
+             
+			 # if /boot is LVM then amend /boot/grub/grub.cfg accordingly
+             if ( [[ $LVM_ROOT -eq 1 ]] && [[ $LVM_SEP_BOOT -eq 0 ]] ) || [[ $LVM_SEP_BOOT -eq 2 ]]; then
+                sed -i '/### BEGIN \/etc\/grub.d\/00_header ###/a insmod lvm' ${MOUNTPOINT}/boot/grub/grub.cfg
+             fi
+             BOOTLOADER="Grub"
+             ;;
+        "2") # Syslinux
+             arch_chroot "syslinux-install_update -iam" 2>/tmp/.errlog
+             check_for_error
+             
+             # Amend configuration file depending on whether lvm used or not for root.
+             if [[ $LVM_ROOT -eq 0 ]]; then
+                sed -i "s/sda[0-9]/${ROOT_PART}/g" ${MOUNTPOINT}/boot/syslinux/syslinux.cfg
+             else
+                sed -i "s/APPEND.*/APPEND root=\/dev\/mapper\/${ROOT_PART} rw/g" ${MOUNTPOINT}/boot/syslinux/syslinux.cfg
+             fi
+             
+             # Amend configuration file for LTS kernel and/or btrfs subvolume as root
+             [[ $LTS -eq 1 ]] && sed -i 's/linux/linux-lts/g' ${MOUNTPOINT}/boot/syslinux/syslinux.cfg
+             [[ $BTRFS_MNT != "" ]] && sed -i "s/rw/rw $BTRFS_MNT/g" ${MOUNTPOINT}/boot/syslinux/syslinux.cfg
+             
+             BOOTLOADER="Syslinux"
+             ;;
+          *) install_base_menu
+             ;;
+    esac  
+}
+
+uefi_bootloader() {
+
+    #Ensure again that efivarfs is mounted
+	[[ -z $(mount | grep /sys/firmware/efi/efivars) ]] && mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+     
+    dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_InstUefiBtTitle" \
+    --menu "$_InstUefiBtBody" 0 0 3 \
+    "1" $"Grub2" \
+    "2" $"rEFInd" \
+    "3" $"systemd-boot" 2>${ANSWER}
+
+     case $(cat ${ANSWER}) in
+     "1") # GRUB
+          dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title " Grub-install " --infobox "$_PlsWaitBody" 0 0
+          sleep 1
+          arch_chroot "grub-install --target=x86_64-efi --efi-directory=${UEFI_MOUNT} --bootloader-id=arch_grub --recheck" 2>/tmp/.errlog
+          arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg" 2>>/tmp/.errlog
+          check_for_error
+
+          # Ask if user wishes to set Grub as the default bootloader and act accordingly
+          dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_SetGrubDefTitle" --yesno "$_SetGrubDefBody ${UEFI_MOUNT}/EFI/boot $_SetGrubDefBody2" 0 0
+          
+          if [[ $? -eq 0 ]]; then
+             arch_chroot "mkdir ${UEFI_MOUNT}/EFI/boot" 2>/tmp/.errlog
+             arch_chroot "cp -r ${UEFI_MOUNT}/EFI/arch_grub/grubx64.efi ${UEFI_MOUNT}/EFI/boot/bootx64.efi" 2>>/tmp/.errlog
+             check_for_error
+             dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_SetDefDoneTitle" --infobox "\nGrub $_SetDefDoneBody" 0 0
+             sleep 2
+          fi
+          
+          BOOTLOADER="Grub"
+          ;;
+ 
+      "2") # rEFInd
+           if [[ $UEFI_MOUNT == "/boot/efi" ]]; then         
+              dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_SetRefiDefTitle" --yesno "$_SetRefiDefBody ${UEFI_MOUNT}/EFI/boot $_SetRefiDefBody2" 0 0
+              
+              if [[ $? -eq 0 ]]; then
+                 clear
+                 arch_chroot "refind-install --usedefault ${UEFI_PART} --alldrivers" 2>/tmp/.errlog
+              else   
+                 clear
+                 arch_chroot "refind-install" 2>/tmp/.errlog
+              fi   
+              
+              check_for_error
+              
+              # Now generate config file to pass kernel parameters. Default read only (ro) changed to read-write (rw),
+              # and amend where using btfs subvol root       
+              arch_chroot "refind-mkrlconf" 2>/tmp/.errlog
+              check_for_error
+              sed -i 's/ro /rw /g' ${MOUNTPOINT}/boot/refind_linux.conf
+              [[ $BTRFS_MNT != "" ]] && sed -i "s/rw/rw $BTRFS_MNT/g" ${MOUNTPOINT}/boot/refind_linux.conf
+              
+              BOOTLOADER="rEFInd"
+           else 
+              dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_RefiErrTitle" --msgbox "$_RefiErrBody" 0 0
+              uefi_bootloader
+           fi
+           ;;
+         
+     "3") # systemd-boot
+          arch_chroot "bootctl --path=${UEFI_MOUNT} install" 2>>/tmp/.errlog
+          check_for_error
+          
+          # Deal with LVM Root
+          if [[ $LVM_ROOT -eq 0 ]]; then
+             sysdb_root=$(blkid -s PARTUUID $"/dev/"${ROOT_PART} | sed 's/.*=//g' | sed 's/"//g')
+          else
+             sysdb_root="/dev/mapper/${ROOT_PART}" 
+          fi
+          
+          # Deal with LTS Kernel
+          if [[ $LTS -eq 1 ]]; then
+            echo -e "title\tMantOS Linux\nlinux\t/vmlinuz-linux-lts\ninitrd\t/initramfs-linux-lts.img\noptions\troot=PARTUUID=${sysdb_root} rw" > ${MOUNTPOINT}${UEFI_MOUNT}/loader/entries/MantOS.conf
+          else
+            echo -e "title\tMantOS Linux\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\noptions\troot=PARTUUID=${sysdb_root} rw" > ${MOUNTPOINT}${UEFI_MOUNT}/loader/entries/MantOS.conf
+          fi
+          
+          # Fix LVM Root installations, and deal with btrfs root subvolume mounting
+          [[ $LVM_ROOT -eq 1 ]] && sed -i "s/PARTUUID=//g" ${MOUNTPOINT}${UEFI_MOUNT}/loader/entries/MantOS.conf
+          [[ $BTRFS_MNT != "" ]] && sed -i "s/rw/rw $BTRFS_MNT/g" ${MOUNTPOINT}${UEFI_MOUNT}/loader/entries/MantOS.conf
+          
+          BOOTLOADER="systemd-boot"
+          # Set the loader file  
+          echo -e "default  MantOS\ntimeout  5" > ${MOUNTPOINT}${UEFI_MOUNT}/loader/loader.conf 2>/tmp/.errlog
+          check_for_error
+          ;;
+          
+      *) install_base_menu
+         ;;
+      esac 
+
+}
+    check_mount
+    # Set the default PATH variable
+    arch_chroot "PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/core_perl" 2>/tmp/.errlog
+    check_for_error
+
+    if [[ $SYSTEM == "BIOS" ]]; then
+       bios_bootloader
+    else
+       uefi_bootloader
+    fi
+}
+
+######################################################################
+##																	##
+##                 Main Interfaces       							##
+##																	##
+######################################################################
+
+# Greet the user when first starting the installer
+greeting() {
+
+dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_WelTitle $VERSION " --msgbox "$_WelBody" 0 0	
+
+}
+
+# Preparation
+prep_menu() {
+	
+	if [[ $SUB_MENU != "prep_menu" ]]; then
+	   SUB_MENU="prep_menu"
+	   HIGHLIGHT_SUB=1
+	else
+	   if [[ $HIGHLIGHT_SUB != 7 ]]; then
+	      HIGHLIGHT_SUB=$(( HIGHLIGHT_SUB + 1 ))
+	   fi
+	fi
+	
+   dialog --default-item ${HIGHLIGHT_SUB} --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_PrepTitle" \
+    --menu "$_PrepBody" 0 0 7 \
+ 	"1" "$_ConfBseVirtCon" \
+ 	"2" "$_PrepKBLayout" \
+	"3" "$_DevShowOpt" \
+	"4" "$_PrepPartDisk" \
+	"5" "$_PrepLVM" \
+	"6" "$_PrepMntPart" \
+	"7" "$_Back" 2>${ANSWER}
+
+    HIGHLIGHT_SUB=$(cat ${ANSWER})
+	case $(cat ${ANSWER}) in
+        "1") set_keymap
+             ;;
+        "2") set_xkbmap
+             ;;
+        "3") show_devices
+             ;;
+        "4") umount_partitions
+             select_device
+             create_partitions
+             ;;
+        "5") detect_lvm
+             deactivate_lvm
+             find_lvm_partitions
+             create_lvm
+             ;;
+        "6") mount_partitions
+             ;;        
+          *) main_menu
+             ;;
+    esac
+    
+    prep_menu  	
+	
+}
+
+# Base Installation
+install_root_menu() {
+
+	if [[ $SUB_MENU != "install_base_menu" ]]; then
+	   SUB_MENU="install_base_menu"
+	   HIGHLIGHT_SUB=1
+	else
+	   if [[ $HIGHLIGHT_SUB != 4 ]]; then
+	      HIGHLIGHT_SUB=$(( HIGHLIGHT_SUB + 1 ))
+	   fi
+	fi
+
+   dialog --default-item ${HIGHLIGHT_SUB} --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_InstBsMenuTitle" --menu "$_InstBseMenuBody" 0 0 4 \
+ 	"1" "$_InstBse" \
+ 	"2" "$_MMRunMkinit" \
+	"3" "$_InstBootldr" \
+	"4" "$_Back" 2>${ANSWER}	
+	
+	HIGHLIGHT_SUB=$(cat ${ANSWER})
+	case $(cat ${ANSWER}) in
+        "1") install_root
+             ;;
+        "2") run_mkinitcpio
+             ;;
+        "3") install_bootloader
+             ;;
+          *) main_menu
+             ;;
+     esac
+    
+    install_root_menu 	
+}
+
+# Base Configuration
+config_base_menu() {
+	
+	# Set the default PATH variable
+    arch_chroot "PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/bin/core_perl" 2>/tmp/.errlog
+	check_for_error
+	
+	if [[ $SUB_MENU != "config_base_menu" ]]; then
+	   SUB_MENU="config_base_menu"
+	   HIGHLIGHT_SUB=1
+	else
+	   if [[ $HIGHLIGHT_SUB != 8 ]]; then
+	      HIGHLIGHT_SUB=$(( HIGHLIGHT_SUB + 1 ))
+	   fi
+	fi
+
+    dialog --default-item ${HIGHLIGHT_SUB} --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_ConfBseTitle" --menu "$_ConfBseBody" 0 0 8 \
+ 	"1" "$_ConfBseFstab" \
+	"2" "$_ConfBseHost" \
+	"3" "$_ConfBseTime" \
+	"4" "$_ConfBseHWC" \
+	"5" "$_ConfBseSysLoc" \
+	"6" "$_ConfUsrRoot" \
+	"7" "$_ConfUsrNew" \
+	"8" "$_Back" 2>${ANSWER}	
+	
+	HIGHLIGHT_SUB=$(cat ${ANSWER})
+	case $(cat ${ANSWER}) in
+        "1") generate_fstab 
+             ;;
+        "2") set_hostname
+             ;;
+        "3") set_timezone
+             ;;
+        "4") set_hw_clock
+             ;;            
+        "5") set_locale
+             ;;
+        "6") set_root_password
+             ;;
+        "7") create_new_user
+             ;;           
+          *) main_menu
+             ;;
+    esac
+    
+    config_base_menu
+
+}
+
+# Edit configs of installed system
+edit_configs() {
+	
+	# Clear the file variables
+	FILE=""
+	FILE2=""
+	
+	if [[ $SUB_MENU != "edit configs" ]]; then
+	   SUB_MENU="edit configs"
+	   HIGHLIGHT_SUB=1
+	else
+	   if [[ $HIGHLIGHT_SUB != 10 ]]; then
+	      HIGHLIGHT_SUB=$(( HIGHLIGHT_SUB + 1 ))
+	   fi
+	fi
+
+   dialog --default-item ${HIGHLIGHT_SUB} --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_SeeConfOptTitle" --menu "$_SeeConfOptBody" 0 0 11 \
+   "1" "/etc/vconsole.conf" \
+   "2" "/etc/locale.conf" \
+   "3" "/etc/hostname" \
+   "4" "/etc/hosts" \
+   "5" "/etc/sudoers" \
+   "6" "/etc/mkinitcpio.conf" \
+   "7" "/etc/fstab" \
+   "8" "$BOOTLOADER" \
+   "9" "/etc/pacman.conf" \
+  "10" "/etc/pacman.d/mirrorlist" \
+  "11" "$_Back" 2>${ANSWER}
+	
+	HIGHLIGHT_SUB=$(cat ${ANSWER})
+	case $(cat ${ANSWER}) in
+	    "1") FILE="${MOUNTPOINT}/etc/vconsole.conf"
+             ;;
+        "2") FILE="${MOUNTPOINT}/etc/locale.conf" 
+             ;;
+        "3") FILE="${MOUNTPOINT}/etc/hostname"
+             ;;
+        "4") FILE="${MOUNTPOINT}/etc/hosts"
+             ;;
+        "5") FILE="${MOUNTPOINT}/etc/sudoers"
+             ;;
+        "6") FILE="${MOUNTPOINT}/etc/mkinitcpio.conf"
+             ;;
+        "7") FILE="${MOUNTPOINT}/etc/fstab"
+             ;;
+        "8") case $BOOTLOADER in
+                   "Grub") FILE="${MOUNTPOINT}/etc/default/grub"
+                           ;;
+               "Syslinux") FILE="${MOUNTPOINT}/boot/syslinux/syslinux.cfg"
+                           ;;
+           "systemd-boot") FILE="${MOUNTPOINT}${UEFI_MOUNT}/loader/entries/MantOS.conf" 
+                           FILE2="${MOUNTPOINT}${UEFI_MOUNT}/loader/loader.conf"
+                           ;;
+                 "rEFInd") [[ -e ${MOUNTPOINT}${UEFI_MOUNT}/EFI/refind/refind.conf ]] \
+                           && FILE="${MOUNTPOINT}${UEFI_MOUNT}/EFI/refind/refind.conf" || FILE="${MOUNTPOINT}${UEFI_MOUNT}/EFI/BOOT/refind.conf"
+                           FILE2="${MOUNTPOINT}/boot/refind_linux.conf"
+                           ;;
+              esac
+             ;;
+        "9") FILE="${MOUNTPOINT}/etc/pacman.conf"
+             ;;
+       "10") FILE="${MOUNTPOINT}/etc/pacman.d/mirrorlist"
+             ;;   
+         *) main_menu
+            ;;
+     esac
+     
+        # open file(s) with nano   
+        if [[ -e $FILE ]] && [[ $FILE2 != "" ]]; then
+           nano $FILE $FILE2
+        elif [[ -e $FILE ]]; then 
+           nano $FILE
+        else
+           dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_SeeConfErrTitle" --msgbox "$_SeeConfErrBody1" 0 0
+        fi
+     
+     edit_configs
+}
+
+main_menu() {
+	
+	if [[ $HIGHLIGHT != 5 ]]; then
+	   HIGHLIGHT=$(( HIGHLIGHT + 1 ))
+	fi
+	
+    dialog --default-item ${HIGHLIGHT} --backtitle "$VERSION - $SYSTEM ($ARCHI)" --title "$_MMTitle" \
+    --menu "$_MMBody" 0 0 5 \
+ 	"1" "$_MMPrep" \
+	"2" "$_MMInstBse" \
+	"3" "$_MMConfBse" \
+    "4" "$_SeeConfOpt" \
+	"5" "$_Done" 2>${ANSWER}
+
+    HIGHLIGHT=$(cat ${ANSWER})
+    
+    # Depending on the answer, first check whether partition(s) are mounted and whether base has been installed
+    if [[ $(cat ${ANSWER}) -eq 2 ]]; then
+       check_mount
+    fi
+
+    if [[ $(cat ${ANSWER}) -ge 3 ]] && [[ $(cat ${ANSWER}) -le 4 ]]; then
+       check_mount
+       check_base
+    fi
+    
+    case $(cat ${ANSWER}) in
+        "1") prep_menu 
+             ;;
+        "2") install_root_menu
+             ;;
+        "3") config_base_menu
+             ;;         
+        "4") edit_configs
+             ;;            
+          *) dialog --backtitle "$VERSION - $SYSTEM ($ARCHI)" --yesno "$_CloseInstBody" 0 0
+          
+             if [[ $? -eq 0 ]]; then
+                umount_partitions
+                clear
+                exit 0
+             else
+                main_menu
+             fi
+             
+             ;;
+    esac
+    
+    main_menu 
+    
+}
+
+######################################################################
+##																	##
+##                        Execution     							##
+##																	##
+######################################################################
+select_language
+check_system
+
+	while true; do
+          main_menu      
+    done

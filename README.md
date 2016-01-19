@@ -9,13 +9,12 @@
    * For best results build on either pure Arch, ArchBang, or MantOS
  * Must be invited to the repo currently (if you can read this, you are already)
    * People who are on the repo:
-     * Matt
-     * Brittany
-     * Eugene
+     * Matt Freitas-Stavola
+     * Eugene Fong
  * Must be root or a sudoer
  * archiso
    * ```$ sudo pacman -S archiso```
- * git
+ * gits
    * ```$ sudo pacman -S git```
 
 ###Building
@@ -40,16 +39,10 @@
    * ```$ sudo git checkout mantos-ab```
  * Create a backup directory
    * ```$ sudo mkdir ~/MantOS/backup```
- * Edit the path in the repo's pacman.conf
-   * Look for the line ```[repo]```
-   * Change the server line to use the correct path for your machine
-   * Ex: ```file:///home/mbs/archbang/aur/repo/$arch``` or ```file:///home/kevin/archbang/aur/repo/$arch```
 
 ####Build steps
  * cd into the MantOS directory
    * ```$ cd ~/MantOS/```
- * Build AUR package repo
-   * ```$ sudo ./make-aur-packages```
  * Run the build script
    * ```$ sudo ./build -v```
  * Move your iso from out/ to backup/

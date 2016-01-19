@@ -10,7 +10,6 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/bin/pacman-key --init
 ExecStart=/usr/bin/pacman-key --populate archlinux
-ExecStart=/usr/bin/pacman-key --populate archassault
 ExecStart=/usr/bin/pacman-key --populate blackarch
 
 [Install]

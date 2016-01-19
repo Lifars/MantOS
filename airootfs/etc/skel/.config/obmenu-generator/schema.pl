@@ -1,4 +1,4 @@
-require '/home/live/.config/obmenu-generator/config.pl';
+require '/home/eugene/.config/obmenu-generator/config.pl';
 
 our $SCHEMA = [
     #{sep => 'ArchBang'},
@@ -11,10 +11,6 @@ our $SCHEMA = [
 
 	{sep => undef},
 
-        {item => ['terminator -e sudo abinstall',     'Install',      '']},
-        {item => ['update_doc',    'Guide',        '']},
-# 		{item => ['terminator -e wifiwrap',	'Wifi Setup',	'']},
-        {sep => undef},
 
 
 	{raw => q(<menu id="Applications" label="Applications">)},
