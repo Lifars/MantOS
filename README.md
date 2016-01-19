@@ -1,5 +1,11 @@
 # MantOS GNU/Linux
 
+##Summary
+
+MantOS is a GNU/Linux network security focused distro based on [Archbang](https://github.com/mrgreen3/archbang).
+
+We aim to provide the tools you need to analyze potential threats while being minimal.
+
 ##Building From Source
 
 ###Prerequisites
@@ -7,14 +13,10 @@
  * Must be on an Arch GNU/Linux system
    * Note, this will not build correctly on Manjaro
    * For best results build on either pure Arch, ArchBang, or MantOS
- * Must be invited to the repo currently (if you can read this, you are already)
-   * People who are on the repo:
-     * Matt Freitas-Stavola
-     * Eugene Fong
  * Must be root or a sudoer
  * archiso
    * ```$ sudo pacman -S archiso```
- * gits
+ * git
    * ```$ sudo pacman -S git```
 
 ###Building
@@ -32,13 +34,10 @@
    * ```$ cd ~```
  * Clone the repository
    * ```$ git clone https://github.com/mbStavola/MantOS.git```
- * Make root the owner of everything in the repository and alter permissions
-   * ```$ sudo chown -R root ~/MantOS/```
-   * ```$ sudo chmod 755 ~/MantOS/```
  * Change branches (if for some reason you cloned master)
-   * ```$ sudo git checkout mantos-ab```
+   * ```$ git checkout mantos-ab```
  * Create a backup directory
-   * ```$ sudo mkdir ~/MantOS/backup```
+   * ```$ mkdir ~/MantOS/backup```
 
 ####Build steps
  * cd into the MantOS directory
@@ -46,31 +45,30 @@
  * Run the build script
    * ```$ sudo ./build -v```
  * Move your iso from out/ to backup/
-   * ```$ sudo mv ./out/*.iso ./backup```
+   * ```$ mv ./out/*.iso ./backup```
  * Run the clean script
    * ```$ sudo ./clean```
 
 ##Adding packages
 Adding packages to MantOS is pretty simple.
 
-First we must find out **what** we want to add. This part is pure research and rests on your shoulders. Exercise your Google-fu and leverage your personal experience, but don't be afraid to consult Paul or I if you are questioning the usefulness of a particular package to the OS.
+First we must find out **what** we want to add. This part is pure research and rests on your shoulders. Exercise your Google-fu and leverage your personal experience, but don't be afraid to create an issue if you are questioning the usefulness of a particular package to the OS.
 
 Next we look to see **where** we can find the package. Currently, MantOS supports these repos out of the box:
 
   * Official Arch repositories
   * Official BlackArch repositories
-  * Official ArchAssault repositories
   * Arch User repositories
 
 After that we can consults this incredibly simple chart on **how** to add your package to the repo:
 
 | Repo          			   | File       	    |
 |:----------------------------:|:------------------:|
-| Arch, BlackArch, ArchAssault | packages      		|
+| Arch, BlackArch | packages      		|
 | AUR     					   | aur_packages	    |
 | Other						   | customize_airootfs |
 
-For Arch, BlackArch, ArchAssault, and AUR packages, simply add the name of that package (as it is lised in that particular repo) to the appopriate flat file in the root directory of MantOS. Packages are organized by type, so please try to abide by the categories.
+For Arch, BlackArch, and AUR packages, simply add the name of that package (as it is lised in that particular repo) to the appopriate flat file in the root directory of MantOS. Packages are organized by type, so please try to abide by the categories.
 
 For packages **not** found in these repositories, unfortunately you will have to build from source. Here are some directions on how to do so:
 
