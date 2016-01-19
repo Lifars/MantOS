@@ -37,6 +37,14 @@
 
   <separator/>
 
+    <item label="Install" icon="">
+      <action name="Execute">
+        <execute>sudo terminator -e /abif-master/abif</execute>
+      </action>
+    </item>
+        
+  <separator/>
+
   <menu id="Applications" label="Applications">
     <menu id="Accessories" icon="" label="Accessories">
       <item label="About Xfce" icon="">
