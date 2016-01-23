@@ -23,7 +23,7 @@ NOTES
 1) From command prompt, type:
 sudo blkid
 2) You'll see a list showing harddrives and USB's labelled "sda1, sdb1, etc"
-3) Create a directory inside mnt named “usbdrive” (or whatever name you want, it may save your old names and not allow you to use the same names again)
+3) Create a directory inside mnt named “usbdrive” (or whatever name you want, it may save your old names and not allow you to use the same names again unless you delete those folders)
 4) sudo mount /dev/sdb# /mnt/usbdrive
 
 #Auto mounting
@@ -107,18 +107,6 @@ URL		| https://github.com/bl4de/Cheetah
 - Complete penetration testing suite (port scanning, brute force attacks, services discovery, common vulnerabilities searching, reporting etc.)
 - NOTE: NECESSARY DEPENDENCIES --> python2-requests, and python-requests
 
-	NAME 	| python2-requests
-	COMMAND | ?
-	URL		| http://docs.python-requests.org/en/latest/
-	
-	- Requests is an Apache2 Licensed HTTP library, written in Python, for human beings.
-
-	NAME 	| python-requests
-	COMMAND | ?
-	URL		| http://docs.python-requests.org/en/latest/
-	
-	- Requests is an Apache2 Licensed HTTP library, written in Python, for human beings.
-
 NAME 	| dmitry
 COMMAND | dmitry
 URL		| http://linux.die.net/man/1/dmitry
@@ -161,12 +149,6 @@ URL		| https://github.com/volatilityfoundation/volatility/wiki
 
 - A memory forensics toolkit.
 - NOTE: Analyzes .dmp files
-
-NAME 	| python2-dbus
-COMMAND | ?
-URL		| http://www.freedesktop.org/wiki/Software/DBusBindings/
-
-- Python 2.7 bindings for DBUS (Avahi depend)
 
 NAME 	| ettercap
 COMMAND | ettercap
