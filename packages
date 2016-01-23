@@ -157,6 +157,11 @@ artwiz-fonts
 ttf-droid
 ttf-liberation
 
+# Libraries
+python2-requests
+python-requests
+python2-dbus
+
 # Tools
 air
 dc3dd
@@ -165,8 +170,6 @@ gnu-netcat
 bios_memimage
 bro
 cheetah
-python2-requests
-python-requests
 dmitry 
 firewalk 
 fl0p
@@ -175,7 +178,6 @@ gvfs
 nmap
 ophcrack
 volatility
-python2-dbus
 ettercap
 wireshark-gtk
 kismet
