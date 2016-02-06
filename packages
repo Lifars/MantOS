@@ -43,6 +43,7 @@ binutils
 fakeroot
 gparted
 jshon
+linux-headers
 make
 ntp
 patch
