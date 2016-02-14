@@ -127,8 +127,8 @@
   </menu>
 
 <!--
-Enable if you want to use LibreOffice's main suite
--->
+Enable if you want to use the LibreOffice suite
+
   <menu id="Office" icon="" label="Office">
     <item label="LibreOffice Base" icon="/usr/share/icons/hicolor/16x16/apps/libreoffice-base.png"><action name="Execute"><execute>libreoffice --base</execute></action></item>
     <item label="LibreOffice Calc" icon="/usr/share/icons/hicolor/16x16/apps/libreoffice-calc.png"><action name="Execute"><execute>libreoffice --calc</execute></action></item>
@@ -140,7 +140,7 @@ Enable if you want to use LibreOffice's main suite
     <item label="LibreOffice Math" icon="/usr/share/icons/hicolor/16x16/apps/libreoffice-math.png"><action name="Execute"><execute>libreoffice --math</execute></action></item>
     <item label="LibreOffice Draw" icon="/usr/share/icons/hicolor/16x16/apps/libreoffice-draw.png"><action name="Execute"><execute>libreoffice --draw</execute></action></item>  
   </menu>
-<!--
+
 -->
 
   <menu id="Settings" icon="" label="Settings">
