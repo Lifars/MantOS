@@ -170,7 +170,7 @@ gnu-netcat
 #cryptcat
 bios_memimage
 bro
-cheetah
+cheetah-suite
 dmitry 
 firewalk 
 fl0p
@@ -186,6 +186,7 @@ aircrack-ng
 net-tools
 ssldump
 tcpick
+tcpdump
 argus
 chaosreader
 tcpextract
