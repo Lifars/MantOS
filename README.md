@@ -2,14 +2,6 @@
 <img class="wp-image-5704 size-medium alignleft" src="http://lifars.com/wp-content/uploads/2016/02/MantOS-Logo-300x200.jpg" alt="Network Investigator’s Forensic Toolkit | LIFARS" width="300" height="200" />
 
 &nbsp;
-
-&nbsp;
-
-&nbsp;
-
-&nbsp;
-
-&nbsp;
 <h2></h2>
 <h2>Table of Contents</h2>
 <div id="user-content-toc"></div>
