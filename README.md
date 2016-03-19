@@ -23,7 +23,6 @@ We have tools that do the following:
 
 * Graphically analyze TCP dump files for time, size, segments, and throughput
 * Create forensic images (bit by bit copies), complete disk wipe, data recovery, benchmarking harddrive performance
-* Dump RAM contents to disk
 * MITM-like functionality for intercepting network LAN data
 * Analyze network protocols
 * Wireless network detector, sniffer, instrusion detector
