@@ -1,5 +1,5 @@
 MantOS Documentation
-by Eugene Fong
+by Eugene Fong 
 
 ================================================================
 TABLE OF CONTENTS
@@ -36,7 +36,7 @@ sudo blkid
 ================================================================
 
 NAME 	| package name
-COMMAND | command on terminal (sometimes differs from the name)
+COMMAND | terminal command (sometimes differs from the name)
 URL		| official website and/or helpful guides
 
 - DESCRIPTION + NOTES
@@ -85,13 +85,6 @@ $ newgrp air
 	
 	- Cryptcat is the standard netcat enhanced with twofish encryption with ports for WIndows NT, BSD and Linux
 	- NOTE: Archstrike took cryptcat down around week of 10/20/15 
-
-NAME 	| bios_memimage
-COMMAND | pxedump, usbdump
-URL		| https://citp.princeton.edu/research/memory/
-
-- A tool to dump RAM contents to disk (aka cold boot attack).
--NOTE: It connects to a host machine via ip address but requires editing BIOS of the host machine and then will dump the RAM contents into client machine upon shutdown
 
 NAME 	| bro
 COMMAND | bro
