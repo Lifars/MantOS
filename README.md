@@ -4,20 +4,20 @@
 
 ## Table of Contents
 
-1.  What is MantOS
+1.  What is MantOS?
 2.  Key features
 3.  Support
 4.  Additional Reading
 5.  Licensing and Copyright
 6.  Frequently Asked Questions [FAQ]
 
-## What is MantOS
+## What is MantOS?
 
 MantOS is a GNU/Linux network security focused distro based on [Archbang](https://github.com/mrgreen3/archbang). 
 
 We aim to provide the tools you need to analyze potential threats while being minimal.
 
-## Key features
+## Key Features
 
 MantOS capabilities:
 
@@ -36,7 +36,7 @@ MantOS capabilities:
 
 For a list of tools in MantOS, consult the [documentation](https://github.com/Lifars/MantOS/blob/master/airootfs/etc/MantOSdocumentation.txt).
 
-### Lightweight package
+### Lightweight Package
 
 MantOS is both tiny and undemanding. Our goal is to provide investigators with an operating system that is convenient enough to meet the needs of someone who works on multiple machines. Total installation size is around 3 Gigabytes and takes a short amount of time to install. Since MantOS is easy on system resources it functions on older machines. MantOS can be deployed via live CD, flashdrive, or full OS installation.
 
@@ -44,7 +44,7 @@ MantOS is both tiny and undemanding. Our goal is to provide investigators with a
 
 There is no charge for the distribution of MantOS, just download it and go. Want to customize your MantOS installation? We provide the very code base we use to you, hassle free and also of no charge. We provide MantOS for free because we believe in a forensic community that builds together. Help us make MantOS the best solution it could possibly be.
 
-### Fast, high end support
+### Fast, High-end Support
 
 The MantOS team at LIFARS can provide full enterprise level support and response. Our team is here is listen to your needs and wants, including adding device or tool support or giving instructions on deployment or response. 24/7 support calling is possible in our Premier Support to ensure our team is able to respond any time of day.
 
@@ -63,10 +63,5 @@ We are licensed under GPLv3. You can read the license details in [LICENSE](https
 **Q** - Where I can find the rest of the documentation? How can I contact you for more details?
 
 **A** - You can contact us by e-mailing info@lifars.com or by calling 212-222-7061.
-
-
-* * *
-
-**Q** - How can I contact you for more details? 
 
 
