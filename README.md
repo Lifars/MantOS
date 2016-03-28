@@ -11,13 +11,13 @@
 5.  Licensing and Copyright
 6.  Frequently Asked Questions [FAQ]
 
-## What is MantOS
+## What is MantOS?
 
 MantOS is a GNU/Linux network security focused distro based on [Archbang](https://github.com/mrgreen3/archbang). 
 
 We aim to provide the tools you need to analyze potential threats while being minimal.
 
-## Key features
+## Key Features
 
 We have tools that do the following:
 
@@ -37,7 +37,7 @@ We have tools that do the following:
 
 For a list of tools in MantOS, consult the [documentation](https://github.com/Lifars/MantOS/blob/master/airootfs/etc/MantOSdocumentation.txt).
 
-### Lightweight package
+### Lightweight Package
 
 MantOS is both tiny and undemanding. Our goal is to allow investigators to carry MantOS around with them everywhere they go. This means being convenient enough to meet the needs of someone who works on many different machines. Total installation size is around 3 Gigabytes and takes a short amount of time to install. Since MantOS is easy on system resources you can even use it on older machines. MantOS can be deployed via live CD, flashdrive, or full OS installation.
 
@@ -45,7 +45,7 @@ MantOS is both tiny and undemanding. Our goal is to allow investigators to carry
 
 MantOS is free in both senses of the word. There is no charge for the distribution, just download it and go. Want to customize your MantOS installation? We provide the very code base we use to you, hassle free and also of no charge. Why do we do this? Because we believe in a forensic community that builds together. Help us make MantOS the best solution it could possibly be.
 
-### High end and fast support
+### High-end and Fast Support
 
 The MantOS team here at LIFARS can provide full enterprise level support and response. Our team is here is listen to your needs and wants, including adding device or tool support or giving instructions on deployment or response. 24x7 support calling is possible in our Premier Support to ensure your team is able to respond any time of day.
 
