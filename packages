@@ -71,6 +71,7 @@ slock
 terminator
 tmux
 wget
+yaourt
 zsh
 
 # Media
@@ -191,3 +192,5 @@ chaosreader
 tcpextract
 cookie-cadger
 voipong 
+videosnarf
+ghostpdl

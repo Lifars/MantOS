@@ -73,6 +73,7 @@ su -c "pacman-key --populate"
 sed -i '/#/d;/^[ ]*$/d' /etc/aur_packages
 sed -i ':a;N;$!ba;s/\n/ /g' /etc/aur_packages
 apacman -S $(cat /etc/aur_packages) --noconfirm
+yaourt -S xplico --noconfirm
 
 # Start required systemd services
 systemctl enable pacman-init.service lastmin.service NetworkManager.service lxdm.service ntpd.service
