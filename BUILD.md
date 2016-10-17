@@ -40,14 +40,14 @@ We aim to provide the tools you need to analyze potential threats while being mi
    * ```$ mkdir ~/MantOS/backup```
 
 ####Build steps
+ * Run the clean script
+   * ```$ sudo ./clean```
  * cd into the MantOS directory
    * ```$ cd ~/MantOS/```
  * Run the build script
    * ```$ sudo ./build -v```
  * Move your iso from out/ to backup/
    * ```$ mv ./out/*.iso ./backup```
- * Run the clean script
-   * ```$ sudo ./clean```
 
 ##Adding packages
 Adding packages to MantOS is pretty simple.
