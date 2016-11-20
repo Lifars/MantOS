@@ -33,9 +33,7 @@ We aim to provide the tools you need to analyze potential threats while being mi
  * cd into your home directory
    * ```$ cd ~```
  * Clone the repository
-   * ```$ git clone https://github.com/mbStavola/MantOS.git```
- * Change branches (if for some reason you cloned master)
-   * ```$ git checkout mantos-ab```
+   * ```$ git clone https://github.com/Lifars/MantOS.git```
  * Create a backup directory
    * ```$ mkdir ~/MantOS/backup```
 
