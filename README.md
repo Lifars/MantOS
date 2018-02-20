@@ -1,4 +1,9 @@
-# MantOS - Network Investigator’s Forensic Toolkit
+<hr>
+<h2> The project is no longer supported by LIFARS. </h2> 
+<hr>
+<br/><br/><br/>
+
+## MantOS - Network Investigator’s Forensic Toolkit
 
 ![Network Investigator’s Forensic Toolkit | LIFARS](http://i1.wp.com/lifars.com/wp-content/uploads/2016/02/MantOS.gif?fit=1000%2C333)
 
