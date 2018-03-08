@@ -1,7 +1,1 @@
-NAME="MantOS (Alpha) Linux"
-ID=arch
-PRETTY_NAME="MantOS Linux"
-ANSI_COLOR="0;32"
-HOME_URL="http://www.lifars.com/"
-SUPPORT_URL="http://www.lifars.com/contacts/Contact-Us"
-
+../usr/lib/os-release
