@@ -1,3 +1,4 @@
-out/
+*.swp
+*.iso
 work/
-backup/
+out/
