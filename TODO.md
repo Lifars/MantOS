@@ -10,4 +10,5 @@
 ## Priority 1
 
 * Review packages selection
+* Cutter light theme issue: disassembly looks terrible
 * See field needs
