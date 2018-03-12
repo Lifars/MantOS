@@ -7,6 +7,11 @@
 
 ![Network Investigator’s Forensic Toolkit | LIFARS](http://i1.wp.com/lifars.com/wp-content/uploads/2016/02/MantOS.gif?fit=1000%2C333)
 
+Development is done on branch `dev`, once a stable build process is achieved we
+merge onto `master`.
+
+Any possible PR should point to `dev`.
+
 ## Table of Contents
 
 1.  What is MantOS?
