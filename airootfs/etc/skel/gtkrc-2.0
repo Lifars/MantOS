@@ -1,0 +1,17 @@
+style "xfdesktop-icon-view" {
+  ## opacity of text background (0 - 255, 0 = transparent)
+  XfdesktopIconView::label-alpha = 0
+  XfdesktopIconView::selected-label-alpha = 100
+ 
+  ## text background colors
+  base[NORMAL]    = "#edeceb"
+  base[ACTIVE]    = shade (0.8, "#86abd9")
+  base[SELECTED]  = "#86abd9"
+ 
+  ## text foreground colors
+  fg[NORMAL]      = shade (0.9, "#ffffff")
+  fg[ACTIVE]      = shade (0.8, "#ffffff")
+  fg[SELECTED]    = "#ffffff"
+ 
+}
+widget_class "*XfdesktopIconView*" style "xfdesktop-icon-view"
