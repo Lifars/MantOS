@@ -1,6 +1,6 @@
 0trace
 aesfix
-#afflib # Updated on upstream (BA)
+afflib
 air
 alsa-plugins
 alsa-utils
