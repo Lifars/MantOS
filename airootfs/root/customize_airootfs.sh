@@ -63,6 +63,15 @@ cp -rfv "/etc/skel/gtkrc-2.0" "/root/.gtkrc-2.0"
 # xfce4 and more skel configuration to root but leaving original content for bk
 cp -rfv "/etc/skel/config" "/root/.config/"
 
+# installing menus (maybe switch it to overlay?)
+MANTOS_MENU="/usr/share/mantos-menus"
+cp -rfv "${MANTOS_MENU}/applications-merged/*.menu" \
+    "/etc/xdg/menus/applications-merged/"
+cp -rfv "${MANTOS_MENU}/applications/*.desktop" \
+    "/usr/share/applications/"
+cp -rfv "${MANTOS_MENU}/applications/*.directory" \
+    "/usr/share/desktop-directories/"
+
 # setup repository, add pacman.conf entry, sync databases
 pacman -Syy --noconfirm
 pacman -Scc --noconfirm
@@ -73,4 +82,3 @@ pacman-key --init
 curl -s https://blackarch.org/strap.sh | \
     sed "s|get_mirror$|#get_mirror|1" | sh
 pacman-key --populate blackarch archlinux
-
