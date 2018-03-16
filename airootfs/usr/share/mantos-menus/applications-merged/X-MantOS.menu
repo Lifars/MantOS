@@ -1,0 +1,15 @@
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+"http://www.freedesktop.org/standards/menu-spec/menu-1.0.dtd">
+
+<Menu>
+    <Name>Applications</Name>
+
+    <!-- MantOS menu -->
+    <Menu>
+        <Name>MantOS</Name>
+        <Directory>MantOS.directory</Directory>
+        <Include>
+            <Category>X-MantOS</Category>
+        </Include>
+    </Menu>
+</Menu>

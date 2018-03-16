@@ -1,0 +1,9 @@
+README - MantOS desktop entries (XDG)
+
+Every folder contains its own README, check them for further information.
+
+Note: possible icons go under /usr/share/icons/hicolor/XX;
+where XX is the size of the image.
+
+TODO:
+ - consider svg;

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=XXXX
+Icon=utilities-terminal
+Comment=XXXX
+TryExec=/usr/bin/XXXX
+Exec=sh -c '/usr/bin/XXXX;$SHELL'
+StartupNotify=true
+Terminal=true
+#Terminal=false
+Type=Application
+Categories=X-MantOS;
