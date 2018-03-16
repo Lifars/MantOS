@@ -52,16 +52,16 @@ ln -fs /etc/fonts/conf.avail/10-sub-pixel-rgb.conf /etc/fonts/conf.d
 ln -fs /etc/fonts/conf.avail/11-lcdfilter-default.conf /etc/fonts/conf.d
 
 # radare2 configuration file
-cp -rfv /etc/skel/radare2rc /root/.radare2rc
+cp -rfv "/etc/skel/radare2rc" "/root/.radare2rc"
 
 # gdb configuration file
-cp -rfv /etc/skel/gdbinit /root/.gdbinit
+cp -rfv "/etc/skel/gdbinit" "/root/.gdbinit"
 
 # gtk rc (transparency)
-cp -rfv /etc/skel/gtkrc-2.0 /root/.gtkrc-2.0
+cp -rfv "/etc/skel/gtkrc-2.0" "/root/.gtkrc-2.0"
 
-# xfce4 and more skel configuration to root but leaving original tar.gz
-tar xvf "/etc/skel/config.tar.gz" -C "/root/"
+# xfce4 and more skel configuration to root but leaving original content for bk
+cp -rfv "/etc/skel/config" "/root/.config/"
 
 # setup repository, add pacman.conf entry, sync databases
 pacman -Syy --noconfirm
