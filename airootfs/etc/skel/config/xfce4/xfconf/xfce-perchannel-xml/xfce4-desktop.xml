@@ -9,15 +9,15 @@
           <property name="image-style" type="int" value="0"/>
           <property name="last-image" type="string" value="/usr/share/backgrounds/xfce/xfce-teal.jpg"/>
           <property name="color1" type="array">
-            <value type="uint" value="14183"/>
-            <value type="uint" value="5310"/>
-            <value type="uint" value="20272"/>
+            <value type="uint" value="14798"/>
+            <value type="uint" value="14798"/>
+            <value type="uint" value="14798"/>
             <value type="uint" value="65535"/>
           </property>
           <property name="color2" type="array">
-            <value type="uint" value="27499"/>
-            <value type="uint" value="14392"/>
-            <value type="uint" value="36494"/>
+            <value type="uint" value="0"/>
+            <value type="uint" value="0"/>
+            <value type="uint" value="0"/>
             <value type="uint" value="65535"/>
           </property>
         </property>
