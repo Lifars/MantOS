@@ -1,9 +1,9 @@
 [Desktop Entry]
-Name=XXXX
+Name=tcpdump
 Icon=utilities-terminal
-Comment=XXXX
-TryExec=/usr/bin/XXXX
-Exec=sh -c '/usr/bin/XXXX;$SHELL'
+Comment=Powerful command-line packet analyzer
+TryExec=/usr/bin/tcpdump
+Exec=sh -c '/usr/bin/tcpdump;$SHELL'
 StartupNotify=true
 Terminal=true
 #Terminal=false
