@@ -15,10 +15,10 @@ We aim to provide the tools you need to analyze potential threats while being
  * Must be on an x86_64 Arch GNU/Linux system
    * Note, this will not build correctly on Manjaro
    * For best results build on either pure Arch, BlackArch or MantOS
- * Must be root
- * archiso
+ * Must be `root`
+ * `archiso`
    * ```# pacman -S archiso```
- * git
+ * `git`
    * ```# pacman -S git```
  * If using Arch Linux, you should have BlackArch repository configured
 
@@ -28,23 +28,22 @@ We aim to provide the tools you need to analyze potential threats while being
  * Update your pacman key rings.
    * ```# pacman-key --init```
    * ```# pacman-key --populate```
- * If you're running on a fresh install of Arch, you must first sync your system
-    with the online package repositories. 
+ * If you're running on a fresh Arch installation, you must first sync your 
+    system with the online package repositories. 
    * ```# pacman -Syyu```
 
-#### Initial Steps
- * cd into your home directory
-   * ```$ cd ~```
- * Clone the repository
-   * ```$ git clone https://github.com/Lifars/MantOS.git```
- * Create a backup directory
-   * ```$ mkdir ~/MantOS/backup```
-
 #### Build steps
+ * `cd` into a working directory of your choice
+ * Clone the repository
+   * ```# git clone https://github.com/Lifars/MantOS.git```
  * cd into the MantOS directory
-   * ```$ cd ~/MantOS/```
- * Run the build script
+   * ```# cd MantOS/```
+ * Make sure everything is owned by `root`
+   * `# chown root:root MantOS/`
+ * Run the build script (as `root`)
    * ```# ./build.sh -v```
+   
+note: the ISO will be placed on `out/`
 
 ## Adding packages
 Adding packages to MantOS is pretty simple.
@@ -82,28 +81,18 @@ For packages **not** found in these repositories, unfortunately you will have to
      This way you have a clear idea of the steps that you need to take and that
       actually work.
      Usually it's a few simple modifications to get it running on the iso.
- * There are two ways to build from source:
-   * Make a PKGBUILD
-     * PKGBUILD's are simply metadata about a package and how to actually set
-        it up on a machine
-       * Basically, you are setting BASH variables and defining the body of two
-          functions
-     * Most of this information is self explanatory, and you can get everything
-        from the developer's site or the package's wiki
-     * Example PKGBUILD: http://ix.io/66p
-   * Build it in the customize script
-      * This requires you to download the package (and/or it's required files)
-         and store it in the temporary directory
-      * This directory is MantOS/airootfs/etc/skel
-      * When the customize script is run, skel actually becomes the root user's
-         home directory, keep this in mind when working in relation to other
-         directories
-      * In the customize script, follow the developer (or your own) build
-         instructions and work out of /root/
-		* ```chmod 755 /root/xampp-linux-*-installer.run```
-        * ```echo "Y" | /root/xampp-linux-*-installer.run --mode text```
-        * ```rm /root/xampp-linux-*-installer.run```
-
+ * Make a PKGBUILD
+  * PKGBUILD's are simply metadata about a package and how to actually set
+     it up on a machine
+    * Basically, you are setting shell variables and defining the body of 
+       functions
+  * Most of this information is self explanatory, and you can get everything
+     from the developer's site or the package's wiki
+  * Example PKGBUILD: http://ix.io/66p
+ * Build the package (`makepkg`) and place it under `/opt`
+ * Edit `customize_airootfs.sh` to call `pacman -U` with the package you placed 
+   under `/opt`
+ 
 ## Configuring Packages
 After a package is put into the iso, there is a good chance you might want to
  configure it. This is done by working through skel/ and the customize script:
