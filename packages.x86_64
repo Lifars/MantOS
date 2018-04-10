@@ -133,7 +133,10 @@ stegsolve
 sublist3r
 tcpdump
 tcpextract
+tcpflow
 tcpick
+tcpreplay
+tcptrace
 testdisk
 theharvester
 tmux
