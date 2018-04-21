@@ -88,7 +88,9 @@ net-tools
 networkmanager
 network-manager-applet
 networkmanager-openvpn
+networkminer
 nfs-utils
+ngrep
 nikto
 nmap
 noriben
@@ -131,6 +133,7 @@ stegdetect
 steghide
 stegsolve
 sublist3r
+tcpdstat
 tcpdump
 tcpextract
 tcpflow
