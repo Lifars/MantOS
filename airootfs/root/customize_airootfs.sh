@@ -21,17 +21,24 @@ sed -i 's/#\(HandleSuspendKey=\)suspend/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleHibernateKey=\)hibernate/\1ignore/' /etc/systemd/logind.conf
 sed -i 's/#\(HandleLidSwitch=\)suspend/\1ignore/' /etc/systemd/logind.conf
 
-# enable useful services and display manager
+# enable useful services and display manager / also disable a few
 enabled_services=('choose-mirror.service' 'lxdm.service' 'vboxservice.service'
                   'NetworkManager.service')
+disabled_services=('dhcpcd' 'sshd' 'rpcbind.service')
 systemctl enable ${enabled_services[@]}
+systemctl disable ${disabled_services[@]}
+
+# set target to graphical
 systemctl set-default graphical.target
 
 # create the user directory for live session
 if [ ! -d /root ]; then
-    mkdir -p /root/Desktop
+    mkdir -p /root
     chmod 700 /root && chown -R root:root /root
 fi
+
+# create root Desktop folder
+mkdir -p /root/Desktop
 
 # remove special (not needed) files
 rm /etc/systemd/system/getty@tty1.service.d/autologin.conf
@@ -42,6 +49,16 @@ echo "root:mantos" | chpasswd
 
 # default shell
 chsh -s /bin/zsh
+
+# setup repository, add pacman.conf entry, sync databases
+pacman -Syy --noconfirm
+pacman-optimize
+pacman-db-upgrade
+pacman-key --init
+# install BlackArch repository with default mirror (that's why the sed)
+curl -s https://blackarch.org/strap.sh | \
+    sed "s|get_mirror$|#get_mirror|1" | sh
+pacman-key --populate blackarch archlinux
 
 # disabling VirtualBox notification
 sed -i "s|notify-send|echo|g" /usr/bin/VBoxClient-all
@@ -64,13 +81,3 @@ cp -rfv "/etc/skel/gtkrc-2.0" "/root/.gtkrc-2.0"
 rm -fr /root/.config || true
 cp -rfv /etc/skel/config /root/.config
 
-# setup repository, add pacman.conf entry, sync databases
-pacman -Syy --noconfirm
-pacman -Scc --noconfirm
-pacman-optimize
-pacman-db-upgrade
-pacman-key --init
-# install BlackArch repository with default mirror (that's why the sed)
-curl -s https://blackarch.org/strap.sh | \
-    sed "s|get_mirror$|#get_mirror|1" | sh
-pacman-key --populate blackarch archlinux
