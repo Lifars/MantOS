@@ -40,6 +40,9 @@ fi
 # create root Desktop folder
 mkdir -p /root/Desktop
 
+# disable pc speaker beep
+echo "blacklist pcspkr" > /etc/modprobe.d/nobeep.conf
+
 # remove special (not needed) files
 rm /etc/systemd/system/getty@tty1.service.d/autologin.conf
 rm /root/{.automated_script.sh,.zlogin}
@@ -51,13 +54,12 @@ echo "root:mantos" | chpasswd
 chsh -s /bin/zsh
 
 # setup repository, add pacman.conf entry, sync databases
-pacman -Syy --noconfirm
-pacman-optimize
+pacman -Sy --noconfirm
 pacman-db-upgrade
 pacman-key --init
 # install BlackArch repository with default mirror (that's why the sed)
 curl -s https://blackarch.org/strap.sh | \
-    sed "s|get_mirror$|#get_mirror|1" | sh
+     sed 's|  check_internet|  #check_internet|' | sh
 pacman-key --populate blackarch archlinux
 
 # disabling VirtualBox notification
