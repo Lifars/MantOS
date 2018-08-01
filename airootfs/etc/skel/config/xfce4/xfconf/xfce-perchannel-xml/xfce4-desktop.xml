@@ -9,15 +9,15 @@
           <property name="image-style" type="int" value="0"/>
           <property name="last-image" type="string" value="/usr/share/backgrounds/xfce/xfce-teal.jpg"/>
           <property name="color1" type="array">
-            <value type="uint" value="14798"/>
-            <value type="uint" value="14798"/>
-            <value type="uint" value="14798"/>
+            <value type="uint" value="0"/>
+            <value type="uint" value="0"/>
+            <value type="uint" value="0"/>
             <value type="uint" value="65535"/>
           </property>
           <property name="color2" type="array">
-            <value type="uint" value="0"/>
-            <value type="uint" value="0"/>
-            <value type="uint" value="0"/>
+            <value type="uint" value="65535"/>
+            <value type="uint" value="65535"/>
+            <value type="uint" value="65535"/>
             <value type="uint" value="65535"/>
           </property>
         </property>
@@ -40,7 +40,7 @@
     </property>
   </property>
   <property name="last" type="empty">
-    <property name="window-width" type="int" value="675"/>
+    <property name="window-width" type="int" value="676"/>
     <property name="window-height" type="int" value="549"/>
   </property>
   <property name="desktop-icons" type="empty">
