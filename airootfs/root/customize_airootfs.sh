@@ -52,12 +52,10 @@ chsh -s /bin/zsh
 
 # setup repository, add pacman.conf entry, sync databases
 pacman -Syy --noconfirm
-pacman-optimize
-pacman-db-upgrade
 pacman-key --init
 # install BlackArch repository with default mirror (that's why the sed)
 curl -s https://blackarch.org/strap.sh | \
-    sed "s|get_mirror$|#get_mirror|1" | sh
+    sed 's|  check_internet|  #check_internet|' | sh
 pacman-key --populate blackarch archlinux
 
 # disabling VirtualBox notification
