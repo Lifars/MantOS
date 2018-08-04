@@ -8,4 +8,5 @@
   <property name="last-window-height" type="int" value="480"/>
   <property name="last-side-pane" type="string" value="ThunarTreePane"/>
   <property name="last-separator-position" type="int" value="170"/>
+  <property name="last-location-bar" type="string" value="ThunarLocationEntry"/>
 </channel>

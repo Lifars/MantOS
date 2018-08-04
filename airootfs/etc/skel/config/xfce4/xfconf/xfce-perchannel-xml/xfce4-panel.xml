@@ -5,17 +5,18 @@
   <property name="panels" type="array">
     <value type="int" value="1"/>
     <property name="panel-1" type="empty">
-      <property name="position" type="string" value="p=6;x=0;y=0"/>
+      <property name="position" type="string" value="p=8;x=960;y=961"/>
       <property name="length" type="uint" value="100"/>
       <property name="position-locked" type="bool" value="true"/>
       <property name="size" type="uint" value="25"/>
       <property name="plugin-ids" type="array">
-        <value type="int" value="1"/>
+        <value type="int" value="7"/>
         <value type="int" value="3"/>
         <value type="int" value="15"/>
         <value type="int" value="4"/>
         <value type="int" value="5"/>
         <value type="int" value="6"/>
+        <value type="int" value="10"/>
         <value type="int" value="2"/>
       </property>
       <property name="background-style" type="uint" value="0"/>
@@ -31,12 +32,6 @@
     </property>
   </property>
   <property name="plugins" type="empty">
-    <property name="plugin-1" type="string" value="applicationsmenu">
-      <property name="button-title" type="string" value=""/>
-      <property name="button-icon" type="string" value="find-location-symbolic"/>
-      <property name="show-menu-icons" type="bool" value="true"/>
-      <property name="show-button-title" type="bool" value="false"/>
-    </property>
     <property name="plugin-2" type="string" value="actions"/>
     <property name="plugin-3" type="string" value="tasklist">
       <property name="flat-buttons" type="bool" value="true"/>
@@ -65,5 +60,7 @@
         <property name="never-confirm-history-clear" type="bool" value="false"/>
       </property>
     </property>
+    <property name="plugin-7" type="string" value="whiskermenu"/>
+    <property name="plugin-10" type="string" value="notification-plugin"/>
   </property>
 </channel>
